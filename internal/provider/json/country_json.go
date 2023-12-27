@@ -1,0 +1,107 @@
+package json
+
+import (
+	"encoding/json"
+)
+
+type CountryJSON struct {
+	LatLng       *LatLngJson         `json:"latlng"`
+	CapitalInfo  *CapitalInfoJson    `json:"capitalInfo"`
+	Population   uint32              `json:"population"`
+	Area         float32             `json:"area"`
+	NumericCode  uint16              `json:"ccn3,string"`
+	Independent  bool                `json:"independent"`
+	UnMember     bool                `json:"unMember"`
+	Landlocked   bool                `json:"landlocked"`
+	Name         CountryNameJson     `json:"name"`
+	Currencies   CurrenciesJson      `json:"currencies"`
+	CallingCodes CollingCodesJson    `json:"idd"`
+	Alpha2Code   string              `json:"cca2"`
+	Alpha3Code   string              `json:"cca3"`
+	Region       string              `json:"region"`
+	Subregion    string              `json:"subregion"`
+	Status       string              `json:"status"`
+	StartOfWeek  string              `json:"startOfWeek"`
+	Flag         string              `json:"flag"`
+	Tld          []string            `json:"tld"`
+	Capital      []string            `json:"capital"`
+	AltSpellings []string            `json:"altSpellings"`
+	Continents   []string            `json:"continents"`
+	Timezones    []string            `json:"timezones"`
+	Languages    map[string]string   `json:"languages"`
+	Translations NamesJson           `json:"translations"`
+	Demonyms     map[string]Demonyms `json:"demonyms"`
+	Maps         map[string]string   `json:"maps"`
+	CoatOfArms   map[string]string   `json:"coatOfArms"`
+	Flags        map[string]string   `json:"flags"`
+	Car          CarJson             `json:"car"`
+}
+
+type CountryNameJson struct {
+	NameJson
+	NativeName NamesJson `json:"nativeName"`
+}
+
+type NamesJson map[string]NameJson
+
+func (nms *NamesJson) UnmarshalJSON(data []byte) error {
+	var res map[string]NameJson
+	if err := json.Unmarshal(data, &res); err != nil {
+		return err
+	}
+	*nms = res
+	return nil
+}
+
+type NameJson struct {
+	Official string `json:"official"`
+	Common   string `json:"common"`
+}
+type CapitalInfoJson struct {
+	LatLng *LatLngJson `json:"latlng"`
+}
+
+type LatLngJson struct {
+	Lat float32
+	Lng float32
+}
+
+func (ll *LatLngJson) UnmarshalJSON(data []byte) error {
+	var ar [2]float32
+	if err := json.Unmarshal(data, &ar); err != nil {
+		return err
+	}
+	ll.Lat = ar[0]
+	ll.Lng = ar[1]
+	return nil
+}
+
+type CurrenciesJson map[string]CurrencyJson
+
+func (c *CurrenciesJson) UnmarshalJSON(data []byte) error {
+	var res map[string]CurrencyJson
+	if err := json.Unmarshal(data, &res); err != nil {
+		return err
+	}
+	*c = res
+	return nil
+}
+
+type CurrencyJson struct {
+	Name   string `json:"name"`
+	Symbol string `json:"symbol"`
+}
+
+type CollingCodesJson struct {
+	Root     string   `json:"root"`
+	Suffixes []string `json:"suffixes"`
+}
+
+type Demonyms struct {
+	F string
+	M string
+}
+type CarJson struct {
+	Signs []string
+	Side  string
+}
