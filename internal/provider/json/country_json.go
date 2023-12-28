@@ -18,6 +18,8 @@ type CountryJSON struct {
 	CallingCodes CollingCodesJson    `json:"idd"`
 	Alpha2Code   string              `json:"cca2"`
 	Alpha3Code   string              `json:"cca3"`
+	Cioc         string              `json:"cioc"`
+	Fifa         string              `json:"fifa"`
 	Region       string              `json:"region"`
 	Subregion    string              `json:"subregion"`
 	Status       string              `json:"status"`
@@ -28,6 +30,8 @@ type CountryJSON struct {
 	AltSpellings []string            `json:"altSpellings"`
 	Continents   []string            `json:"continents"`
 	Timezones    []string            `json:"timezones"`
+	Borders      []string            `json:"borders"`
+	Gini         map[string]float32  `json:"gini"`
 	Languages    map[string]string   `json:"languages"`
 	Translations NamesJson           `json:"translations"`
 	Demonyms     map[string]Demonyms `json:"demonyms"`

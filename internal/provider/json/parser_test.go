@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"github.com/stretchr/testify/assert"
 	"io"
+	"math"
 	"os"
 	"testing"
 )
@@ -15,11 +16,29 @@ func Test_parseJsonData(t *testing.T) {
 		t.Fatal(err)
 	}
 	assert.Equal(t, 250, len(actual))
-	for i, c := range actual {
-		if len(c.Capital) > 1 {
-			t.Logf("%d. %+v", i, c)
+	maxNameLength := 0
+	var name NameJson
+	var borders []string
+	var capital []string
+	var capitalLatLng LatLngJson
+	for _, c := range actual {
+		nameLength := int(math.Max(float64(len(c.Name.Official)), float64(len(c.Name.Common))))
+		if nameLength > maxNameLength {
+			maxNameLength = nameLength
+			name = c.Name.NameJson
 		}
+		if len(c.Borders) > len(borders) {
+			borders = c.Borders
+		}
+		if len(c.Capital) > len(capital) {
+			capital = c.Capital
+			capitalLatLng = *c.LatLng
+		}
+		t.Log("a2:", c.Alpha2Code, ", a3:", c.Alpha3Code)
 	}
+	t.Log("maxNameLength =", maxNameLength, name)
+	t.Log("maxBorders =", borders, ",", len(borders))
+	t.Log("maxCapitals:", capital, "LatLng:", capitalLatLng)
 }
 
 func createTestReader() io.Reader {
