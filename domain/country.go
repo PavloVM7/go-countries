@@ -13,12 +13,27 @@ type Country struct {
 	subregion   string
 	olympicCode string
 	fifa        string
+	flag        string
 	name        countryName
 }
 
-func (c *Country) SetRegion(region, subregion string) {
-	c.region = region
+func (c *Country) Flag() string {
+	return c.flag
+}
+func (c *Country) SetFlag(flag string) {
+	c.flag = flag
+}
+func (c *Country) Region() string {
+	return c.region
+}
+func (c *Country) Subregion() string {
+	return c.subregion
+}
+func (c *Country) SetSubregion(subregion string) {
 	c.subregion = subregion
+}
+func (c *Country) SetRegion(region string) {
+	c.region = region
 }
 func (c *Country) IsUnMember() bool {
 	return c.unMember

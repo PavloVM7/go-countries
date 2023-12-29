@@ -5,6 +5,26 @@ import (
 	"testing"
 )
 
+func TestCountry_SetFlag(t *testing.T) {
+	flag := "🇳🇱"
+	country := createTestCountryNLD()
+	country.SetFlag(flag)
+	assert.Equal(t, flag, country.Flag())
+}
+
+func TestCountry_SetSubregion(t *testing.T) {
+	subregion := "Western Europe"
+	country := createTestCountryNLD()
+	country.SetSubregion(subregion)
+	assert.Equal(t, subregion, country.Subregion())
+}
+func TestCountry_SetRegion(t *testing.T) {
+	region := "Europe"
+	country := createTestCountryNLD()
+	country.SetRegion(region)
+	assert.Equal(t, region, country.Region())
+}
+
 func TestCountry_SetUnMember(t *testing.T) {
 	country := createTestCountryNLD()
 	country.SetUnMember(true)
