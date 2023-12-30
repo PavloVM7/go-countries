@@ -10,3 +10,8 @@ type countryName struct {
 func (cn *countryName) String() string {
 	return fmt.Sprintf("countryName{common: '%s'; official: '%s'", cn.common, cn.official)
 }
+
+type LatLng struct {
+	Lat float32
+	Lng float32
+}

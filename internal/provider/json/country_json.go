@@ -2,6 +2,7 @@ package json
 
 import (
 	"encoding/json"
+	"pm.com/go-countries/domain"
 )
 
 type CountryJSON struct {
@@ -65,10 +66,7 @@ type CapitalInfoJson struct {
 	LatLng *LatLngJson `json:"latlng"`
 }
 
-type LatLngJson struct {
-	Lat float32
-	Lng float32
-}
+type LatLngJson domain.LatLng
 
 func (ll *LatLngJson) UnmarshalJSON(data []byte) error {
 	var ar [2]float32
