@@ -34,7 +34,7 @@ func Test_parseJsonData(t *testing.T) {
 			capital = c.Capital
 			capitalLatLng = *c.LatLng
 		}
-		t.Log("a2:", c.Alpha2Code, ", a3:", c.Alpha3Code)
+		t.Log("continents:", c.Continents, ", region:", c.Region, ", subregion:", c.Subregion)
 	}
 	t.Log("maxNameLength =", maxNameLength, name)
 	t.Log("maxBorders =", borders, ",", len(borders))
