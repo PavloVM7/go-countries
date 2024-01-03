@@ -21,6 +21,11 @@ type CountryRecord struct {
 	StartOfWeek  string
 	Status       string
 }
+type TldRecord struct {
+	Id        uint32
+	CountryId uint16
+	Tld       string
+}
 type BorderRecord struct {
 	Id         uint32
 	CountryId  uint16

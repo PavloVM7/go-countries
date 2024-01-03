@@ -51,11 +51,10 @@ func (s *DatabaseTestSuite) TearDownSuite() {
 func (s *DatabaseTestSuite) TearDownTest() {
 	fmt.Println("--- Truncate tables")
 	res, err := s.database.db.Exec(`TRUNCATE translations, country_continents, countries, languages, regions,
-    borders
+    borders, top_level_domains
     RESTART IDENTITY CASCADE;`)
 	if err != nil {
 		panic(err)
-		//_, _ = fmt.Fprintln(os.Stderr, err)
 	}
 	fmt.Println("Tables truncated.")
 	_, _ = fmt.Fprintln(os.Stdout, "truncate result:", res)
@@ -173,8 +172,7 @@ func (s *DatabaseTestSuite) TestGetSubregion() {
 func (s *DatabaseTestSuite) TestCrateCountry() {
 	name := "Europe"
 	subregionName := "Western Europe"
-	c, r, sr, err := s.createRegions(name, name, subregionName)
-	s.T().Log("c:", c, "r:", r, "s:", sr)
+	_, _, _, err := s.createRegions(name, name, subregionName)
 	s.Nil(err)
 	record := createTestCountry()
 	err = s.database.CreateCountry(&record)
@@ -334,6 +332,51 @@ func (s *DatabaseTestSuite) TestGetBordersNotExist() {
 	actual2, err2 := s.database.GetBorders(country.CountryId + 1)
 	s.Nil(err2)
 	s.Equal([]BorderRecord{}, actual2)
+}
+func (s *DatabaseTestSuite) TestCreateTopLevelDomains() {
+	country := createTestCountry()
+	err := s.createCountry("Europe", "Europe", "Western Europe", country)
+	s.Nil(err)
+	tlds := []string{".nl ", ".nld"}
+	actual, errQ := s.database.CreateTopLevelDomains(country.CountryId, tlds...)
+	s.Nil(errQ)
+	expected := []TldRecord{
+		{Id: 1, CountryId: country.CountryId, Tld: ".nl"},
+		{Id: 2, CountryId: country.CountryId, Tld: ".nld"},
+	}
+	s.Equal(expected, actual)
+}
+func (s *DatabaseTestSuite) TestGetTopLevelDomains() {
+	country := createTestCountry()
+	err := s.createCountry("Europe", "Europe", "Western Europe", country)
+	s.Nil(err)
+	tlds := []string{".nl ", ".nld"}
+	actual, errQ := s.database.CreateTopLevelDomains(country.CountryId, tlds...)
+	s.Nil(errQ)
+	expected := []TldRecord{
+		{Id: 1, CountryId: country.CountryId, Tld: ".nl"},
+		{Id: 2, CountryId: country.CountryId, Tld: ".nld"},
+	}
+	s.Equal(expected, actual)
+	actual2, errQ2 := s.database.GetTopLevelDomains(country.CountryId)
+	s.Nil(errQ2)
+	s.Equal(actual, actual2)
+}
+func (s *DatabaseTestSuite) TestGetTopLevelDomainsNotExist() {
+	country := createTestCountry()
+	err := s.createCountry("Europe", "Europe", "Western Europe", country)
+	s.Nil(err)
+	tlds := []string{".nl ", ".nld"}
+	actual, errQ := s.database.CreateTopLevelDomains(country.CountryId, tlds...)
+	s.Nil(errQ)
+	expected := []TldRecord{
+		{Id: 1, CountryId: country.CountryId, Tld: ".nl"},
+		{Id: 2, CountryId: country.CountryId, Tld: ".nld"},
+	}
+	s.Equal(expected, actual)
+	actual2, errQ2 := s.database.GetTopLevelDomains(country.CountryId + 1)
+	s.Nil(errQ2)
+	s.Equal([]TldRecord{}, actual2)
 }
 func TestDatabaseTestSuite(t *testing.T) {
 	suite.Run(t, new(DatabaseTestSuite))

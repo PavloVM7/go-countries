@@ -20,6 +20,13 @@ CREATE TABLE IF NOT EXISTS countries
     start_of_week TEXT NOT NULL,
     status        TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS top_level_domains
+(
+    id         SERIAL PRIMARY KEY,
+    country_id SMALLINT NOT NULL REFERENCES countries (country_id),
+    tld        TEXT     NOT NULL,
+    UNIQUE (country_id, tld)
+);
 CREATE TABLE IF NOT EXISTS borders
 (
     id          SERIAL PRIMARY KEY,

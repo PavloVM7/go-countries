@@ -14,6 +14,7 @@ type Database struct {
 	regionDb
 	translationDb
 	bordersDb
+	tldDb
 }
 
 func (db *Database) CreateCountry(record *CountryRecord) error {
@@ -99,6 +100,7 @@ func NewDatabase(db *sql.DB) *Database {
 	result.regionDb.db = db
 	result.translationDb.db = db
 	result.bordersDb.db = db
+	result.tldDb.db = db
 	return &result
 }
 func showError(err error) {
