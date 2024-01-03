@@ -50,7 +50,8 @@ func (s *DatabaseTestSuite) TearDownSuite() {
 
 func (s *DatabaseTestSuite) TearDownTest() {
 	fmt.Println("--- Truncate tables")
-	res, err := s.database.db.Exec(`TRUNCATE translations, country_continents, countries, languages, regions 
+	res, err := s.database.db.Exec(`TRUNCATE translations, country_continents, countries, languages, regions,
+    borders
     RESTART IDENTITY CASCADE;`)
 	if err != nil {
 		panic(err)
@@ -257,6 +258,82 @@ func (s *DatabaseTestSuite) TestCreateTranslationNotNativeName() {
 	s.Nil(errT2)
 	s.Equal(TranslationRecord{Id: 2, CountryId: countryId, LanguageId: lng.LanguageId, Native: false,
 		OfficialName: official, CommonName: common}, actual2)
+}
+func (s *DatabaseTestSuite) TestCreateBorders() {
+	country := createTestCountry()
+	err := s.createCountry("Europe", "Europe", "Western Europe", country)
+	s.Nil(err)
+	borders := []string{"BEL", "DEU"}
+	actual, errB := s.database.CreteBorders(country.CountryId, borders...)
+	s.Nil(errB)
+	expected := []BorderRecord{
+		{Id: 1, CountryId: country.CountryId, Alpha3Code: borders[0]},
+		{Id: 2, CountryId: country.CountryId, Alpha3Code: borders[1]},
+	}
+	s.Equal(expected, actual)
+}
+func (s *DatabaseTestSuite) TestCreateBorders1duplicate() {
+	country := createTestCountry()
+	err := s.createCountry("Europe", "Europe", "Western Europe", country)
+	s.Nil(err)
+	borders := []string{"BEL", "DEU"}
+	actual1, err1 := s.database.CreteBorders(country.CountryId, borders[0])
+	s.Nil(err1)
+	expected1 := []BorderRecord{{Id: 1, CountryId: country.CountryId, Alpha3Code: borders[0]}}
+	s.Equal(expected1, actual1)
+	actual2, err2 := s.database.CreteBorders(country.CountryId, borders...)
+	s.NotNil(err2)
+	expected2 := []BorderRecord{{Id: 3, CountryId: country.CountryId, Alpha3Code: borders[1]}}
+	s.Equal(expected2, actual2)
+}
+func (s *DatabaseTestSuite) TestCreateBordersDuplicate() {
+	country := createTestCountry()
+	err := s.createCountry("Europe", "Europe", "Western Europe", country)
+	s.Nil(err)
+	borders := []string{"BEL", "DEU"}
+	actual1, err1 := s.database.CreteBorders(country.CountryId, borders...)
+	s.Nil(err1)
+	expected1 := []BorderRecord{
+		{Id: 1, CountryId: country.CountryId, Alpha3Code: borders[0]},
+		{Id: 2, CountryId: country.CountryId, Alpha3Code: borders[1]},
+	}
+	s.Equal(expected1, actual1)
+	actual2, err2 := s.database.CreteBorders(country.CountryId, borders...)
+	s.NotNil(err2)
+	s.NotNil(actual2)
+	s.Equal(0, len(actual2))
+}
+func (s *DatabaseTestSuite) TestGetBorders() {
+	country := createTestCountry()
+	err := s.createCountry("Europe", "Europe", "Western Europe", country)
+	s.Nil(err)
+	borders := []string{"BEL", "DEU"}
+	actual1, err1 := s.database.CreteBorders(country.CountryId, borders...)
+	s.Nil(err1)
+	expected1 := []BorderRecord{
+		{Id: 1, CountryId: country.CountryId, Alpha3Code: borders[0]},
+		{Id: 2, CountryId: country.CountryId, Alpha3Code: borders[1]},
+	}
+	s.Equal(expected1, actual1)
+	actual2, err2 := s.database.GetBorders(country.CountryId)
+	s.Nil(err2)
+	s.Equal(expected1, actual2)
+}
+func (s *DatabaseTestSuite) TestGetBordersNotExist() {
+	country := createTestCountry()
+	err := s.createCountry("Europe", "Europe", "Western Europe", country)
+	s.Nil(err)
+	borders := []string{"BEL", "DEU"}
+	actual1, err1 := s.database.CreteBorders(country.CountryId, borders...)
+	s.Nil(err1)
+	expected1 := []BorderRecord{
+		{Id: 1, CountryId: country.CountryId, Alpha3Code: borders[0]},
+		{Id: 2, CountryId: country.CountryId, Alpha3Code: borders[1]},
+	}
+	s.Equal(expected1, actual1)
+	actual2, err2 := s.database.GetBorders(country.CountryId + 1)
+	s.Nil(err2)
+	s.Equal([]BorderRecord{}, actual2)
 }
 func TestDatabaseTestSuite(t *testing.T) {
 	suite.Run(t, new(DatabaseTestSuite))

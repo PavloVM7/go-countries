@@ -17,6 +17,7 @@ type Country struct {
 	startOfWeek string
 	status      string
 	name        countryName
+	countryExt
 }
 
 func (c *Country) Flag() string {

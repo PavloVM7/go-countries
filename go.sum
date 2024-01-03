@@ -1,3 +1,5 @@
+github.com/PavloVM7/go-collections v0.1.1 h1:DQFfKVUn+fGmmniFB/F+8q4BDe6Dt4tcbXbBoPsK9FY=
+github.com/PavloVM7/go-collections v0.1.1/go.mod h1:P2Skf3Xy5FtcxqZQvtLn084K/IMJOqJ4frcQRgPcZeM=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/lib/pq v1.10.9 h1:YXG7RB+JIjhP29X+OtkiDnYaXQwpS4JEWq7dtCCRUEw=
