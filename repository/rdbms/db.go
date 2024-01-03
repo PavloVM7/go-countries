@@ -6,6 +6,9 @@ import (
 	"os"
 )
 
+type scannable interface {
+	Scan(dest ...any) error
+}
 type Database struct {
 	db *sql.DB
 	regionDb
@@ -15,16 +18,48 @@ type Database struct {
 func (db *Database) CreateCountry(record *CountryRecord) error {
 	stmt, err := db.db.Prepare(`INSERT INTO countries (country_id, alpha2_code, alpha3_code, olympic_code, 
                        fifa_code, flag, population, area, independent, landlocked, un_member, latitude, longitude, 
-                       region_id, subregion_id, official_name, common_name) 
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+                       region_id, subregion_id, official_name, common_name, start_of_week, status) 
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
 `)
 	if err != nil {
 		return err
 	}
 	_, err = stmt.Exec(record.CountryId, record.Alpha2Code, record.Alpha3Code, record.OlympicCode, record.FifaCode,
 		record.Flag, record.Population, record.Area, record.Independent, record.Landlocked, record.UnMember,
-		record.Latitude, record.Longitude, record.RegionId, record.SubregionId, record.OfficialName, record.CommonName)
+		record.Latitude, record.Longitude, record.RegionId, record.SubregionId, record.OfficialName, record.CommonName,
+		record.StartOfWeek, record.Status)
 	return err
+}
+
+func (db *Database) GetCountry(countryId uint16) (CountryRecord, error) {
+	var result CountryRecord
+	stmt, err := db.db.Prepare("SELECT * FROM countries WHERE country_id=$1")
+	if err != nil {
+		return result, err
+	}
+	defer func(stmt *sql.Stmt) {
+		showError(stmt.Close())
+	}(stmt)
+	rows, errQ := stmt.Query(countryId)
+	if errQ != nil {
+		return result, errQ
+	}
+	defer func(rows *sql.Rows) {
+		showError(rows.Close())
+	}(rows)
+	if rows.Next() {
+		return db.rowsToRecord(rows)
+	}
+	return CountryRecord{}, fmt.Errorf("country not found by id=%d", countryId)
+}
+
+func (db *Database) rowsToRecord(scnbl scannable) (CountryRecord, error) {
+	var resul CountryRecord
+	err := scnbl.Scan(&resul.CountryId, &resul.Alpha2Code, &resul.Alpha3Code, &resul.OlympicCode, &resul.FifaCode,
+		&resul.Flag, &resul.Population, &resul.Area, &resul.Independent, &resul.Landlocked, &resul.UnMember,
+		&resul.Latitude, &resul.Longitude, &resul.RegionId, &resul.SubregionId, &resul.OfficialName, &resul.CommonName,
+		&resul.StartOfWeek, &resul.Status)
+	return resul, err
 }
 
 func (db *Database) CreateLanguage(language string) (LanguageRecord, error) {

@@ -50,21 +50,13 @@ func (s *DatabaseTestSuite) TearDownSuite() {
 
 func (s *DatabaseTestSuite) TearDownTest() {
 	fmt.Println("--- Truncate tables")
-	//stmt, err := s.database.db.Prepare("TRUNCATE TABLE $1 RESTART IDENTITY CASCADE")
-	//if err != nil {
-	//	_, _ = fmt.Fprintln(os.Stderr, err)
-	//}
-	//for _, table := range []string{"countries", "transactions", "country_continents", "languages", "regions"} {
-	//	_, err = stmt.Exec(table)
-	//	if err != nil {
-	//		_, _ = fmt.Fprintln(os.Stderr, "table:", table, "truncate error:", err)
-	//	}
-	//}
 	res, err := s.database.db.Exec(`TRUNCATE translations, country_continents, countries, languages, regions 
     RESTART IDENTITY CASCADE;`)
 	if err != nil {
-		_, _ = fmt.Fprintln(os.Stderr, err)
+		panic(err)
+		//_, _ = fmt.Fprintln(os.Stderr, err)
 	}
+	fmt.Println("Tables truncated.")
 	_, _ = fmt.Fprintln(os.Stdout, "truncate result:", res)
 }
 
@@ -186,6 +178,9 @@ func (s *DatabaseTestSuite) TestCrateCountry() {
 	record := createTestCountry()
 	err = s.database.CreateCountry(&record)
 	s.Nil(err)
+	actual, errG := s.database.GetCountry(record.CountryId)
+	s.Nil(errG)
+	s.Equal(record, actual)
 }
 func (s *DatabaseTestSuite) createRegions(continentName, regionName, subregionName string) (continent, region, subregion RegionRecord, err error) {
 	continent, err = s.database.CreateContinent(continentName)
@@ -217,6 +212,18 @@ func (s *DatabaseTestSuite) createCountry(continent, region, subregion string, c
 	}
 	return nil
 }
+func (s *DatabaseTestSuite) TestGetCountryNotFound() {
+	country := createTestCountry()
+	err := s.createCountry("Europe", "Europe", "Western Europe", country)
+	s.Nil(err)
+	actual, errGet1 := s.database.GetCountry(country.CountryId)
+	s.Nil(errGet1)
+	s.Equal(country, actual)
+	idNotExists := country.CountryId + 1
+	_, errG2 := s.database.GetCountry(idNotExists)
+	s.NotNil(errG2)
+	s.Equal(fmt.Sprintf("country not found by id=%d", idNotExists), errG2.Error())
+}
 func (s *DatabaseTestSuite) TestCreateTranslation() {
 	country := createTestCountry()
 	err := s.createCountry("Europe", "Europe", "Western Europe", country)
@@ -232,6 +239,25 @@ func (s *DatabaseTestSuite) TestCreateTranslation() {
 	s.Equal(TranslationRecord{Id: 1, CountryId: countryId, LanguageId: lng.LanguageId, Native: true,
 		OfficialName: official, CommonName: common}, actual)
 }
+func (s *DatabaseTestSuite) TestCreateTranslationNotNativeName() {
+	country := createTestCountry()
+	err := s.createCountry("Europe", "Europe", "Western Europe", country)
+	s.Nil(err)
+	countryId := country.CountryId
+	language := "nld"
+	official := "Koninkrijk der Nederlanden"
+	common := "Nederland"
+	lng, errL := s.database.CreateLanguage(language)
+	s.Nil(errL)
+	actual, errT := s.database.CreateTransaction(countryId, lng.LanguageId, true, official, common)
+	s.Nil(errT)
+	s.Equal(TranslationRecord{Id: 1, CountryId: countryId, LanguageId: lng.LanguageId, Native: true,
+		OfficialName: official, CommonName: common}, actual)
+	actual2, errT2 := s.database.CreateTransaction(countryId, lng.LanguageId, false, official, common)
+	s.Nil(errT2)
+	s.Equal(TranslationRecord{Id: 2, CountryId: countryId, LanguageId: lng.LanguageId, Native: false,
+		OfficialName: official, CommonName: common}, actual2)
+}
 func TestDatabaseTestSuite(t *testing.T) {
 	suite.Run(t, new(DatabaseTestSuite))
 }
@@ -240,5 +266,6 @@ func createTestCountry() CountryRecord {
 	return CountryRecord{CountryId: 528, Alpha2Code: "NL", Alpha3Code: "NLD", OlympicCode: "NED", FifaCode: "NED",
 		Flag: "🇳🇱", Population: 16655799, Area: 41850.0, Independent: true, Landlocked: false, UnMember: true,
 		Latitude: 52.5, Longitude: 5.75, RegionId: 2, SubregionId: 3,
-		OfficialName: "Kingdom of the Netherlands", CommonName: "Netherlands"}
+		OfficialName: "Kingdom of the Netherlands", CommonName: "Netherlands", StartOfWeek: "monday",
+		Status: "officially-assigned"}
 }
