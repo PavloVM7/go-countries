@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS countries
     alpha3_code   CHAR(3) UNIQUE,
     olympic_code  CHAR(3) UNIQUE NULLS NOT DISTINCT,
     fifa_code     CHAR(3) UNIQUE NULLS NOT DISTINCT,
-    flag          CHAR(4),
+    flag          CHAR(2),
     population    INTEGER,
     area          REAL,
     independent   BOOLEAN NOT NULL,
@@ -16,7 +16,9 @@ CREATE TABLE IF NOT EXISTS countries
     region_id     INTEGER REFERENCES regions (region_id),
     subregion_id  INTEGER REFERENCES regions (region_id),
     official_name TEXT    NOT NULL,
-    common_name   TEXT    NOT NULL
+    common_name   TEXT NOT NULL,
+    start_of_week TEXT NOT NULL,
+    status        TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS country_continents
@@ -36,4 +38,4 @@ CREATE TABLE IF NOT EXISTS translations
     common_name   TEXT     NOT NULL,
     UNIQUE (country_id, language_id, native)
 );
-CREATE UNIQUE INDEX IF NOT EXISTS translations_country ON translations (country_id, language_id);
+CREATE UNIQUE INDEX IF NOT EXISTS translations_country ON translations (country_id, language_id, native);

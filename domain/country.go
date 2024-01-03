@@ -14,6 +14,8 @@ type Country struct {
 	olympicCode string
 	fifa        string
 	flag        string
+	startOfWeek string
+	status      string
 	name        countryName
 }
 

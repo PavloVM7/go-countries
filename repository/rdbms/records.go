@@ -18,6 +18,8 @@ type CountryRecord struct {
 	SubregionId  uint32
 	OfficialName string
 	CommonName   string
+	StartOfWeek  string
+	Status       string
 }
 
 type RegionRecord struct {
