@@ -9,14 +9,13 @@ import (
 	"testing"
 )
 
-type DatabaseTestSuite struct {
+type databaseBaseTestSuite struct {
 	suite.Suite
-	db       *sql.DB
-	database *Database
+	db *sql.DB
 }
 
-func (s *DatabaseTestSuite) SetupSuite() {
-	fmt.Println(">>> From SetupSuite")
+func (s *databaseBaseTestSuite) SetupSuite() {
+	fmt.Println(">>> From Base SetupSuite")
 	var config db.PostgresConfig
 	var err error
 	err = config.Read()
@@ -25,7 +24,7 @@ func (s *DatabaseTestSuite) SetupSuite() {
 	if err != nil {
 		panic(err)
 	}
-	s.database = NewDatabase(s.db)
+
 	_, err = s.execSqlFile("./sql/references.sql")
 	if err != nil {
 		panic(err)
@@ -37,20 +36,20 @@ func (s *DatabaseTestSuite) SetupSuite() {
 	fmt.Println("Database created")
 }
 
-func (s *DatabaseTestSuite) TearDownSuite() {
-	fmt.Println(">>> From TearDownSuite")
-	if s.database != nil {
-		res, er := s.database.db.Exec("DROP DATABASE countries_db")
+func (s *databaseBaseTestSuite) TearDownSuite() {
+	fmt.Println(">>> From Base TearDownSuite")
+	if s.db != nil {
+		res, er := s.db.Exec("DROP DATABASE countries_db")
 		_, _ = fmt.Fprintln(os.Stdout, "drop db result:", res, ", error:", er)
-		if err := s.database.Close(); err != nil {
+		if err := s.db.Close(); err != nil {
 			_, _ = fmt.Fprintln(os.Stderr, err)
 		}
 	}
 }
 
-func (s *DatabaseTestSuite) TearDownTest() {
+func (s *databaseBaseTestSuite) TearDownTest() {
 	fmt.Println("--- Truncate tables")
-	res, err := s.database.db.Exec(`TRUNCATE translations, country_continents, countries, languages, regions,
+	res, err := s.db.Exec(`TRUNCATE translations, country_continents, countries, languages, regions,
     borders, top_level_domains
     RESTART IDENTITY CASCADE;`)
 	if err != nil {
@@ -60,12 +59,65 @@ func (s *DatabaseTestSuite) TearDownTest() {
 	_, _ = fmt.Fprintln(os.Stdout, "truncate result:", res)
 }
 
-func (s *DatabaseTestSuite) execSqlFile(file string) (sql.Result, error) {
+func (s *databaseBaseTestSuite) execSqlFile(file string) (sql.Result, error) {
 	bts, err := os.ReadFile(file)
 	if err != nil {
 		return nil, err
 	}
-	return s.database.db.Exec(string(bts))
+	return s.db.Exec(string(bts))
+}
+
+func (s *databaseBaseTestSuite) createRegions(continentName, regionName, subregionName string) (continent, region, subregion RegionRecord, err error) {
+	dbRegions := regionDb{db: s.db}
+	continent, err = dbRegions.CreateContinent(continentName)
+	if err != nil {
+		err = fmt.Errorf("create continent error: %w", err)
+		return
+	}
+	region, err = dbRegions.CreateRegion(regionName, continent.RegionId)
+	if err != nil {
+		err = fmt.Errorf("create region error: %w", err)
+		return
+	}
+	subregion, err = dbRegions.CreateRegion(subregionName, region.RegionId)
+	if err != nil {
+		err = fmt.Errorf("create soubregion error: %w", err)
+	}
+	return
+}
+func (s *databaseBaseTestSuite) createCountry(continent, region, subregion string, country CountryRecord) error {
+	_, r, sr, err := s.createRegions(continent, region, subregion)
+	country.RegionId = r.RegionId
+	country.SubregionId = sr.RegionId
+	if err != nil {
+		return err
+	}
+	datb := Database{db: s.db}
+	err = datb.CreateCountry(&country)
+	if err != nil {
+		return fmt.Errorf("create country error: %w", err)
+	}
+	return nil
+}
+
+type DatabaseTestSuite struct {
+	databaseBaseTestSuite
+	database *Database
+}
+
+func (s *DatabaseTestSuite) SetupSuite() {
+	s.databaseBaseTestSuite.SetupSuite()
+	s.database = NewDatabase(s.db)
+}
+func (s *DatabaseTestSuite) TearDownSuite() {
+	fmt.Println(">>> From TearDownSuite")
+	if s.database != nil {
+		res, er := s.database.db.Exec("DROP DATABASE countries_db")
+		_, _ = fmt.Fprintln(os.Stdout, "drop db result:", res, ", error:", er)
+		if err := s.database.Close(); err != nil {
+			_, _ = fmt.Fprintln(os.Stderr, err)
+		}
+	}
 }
 
 func (s *DatabaseTestSuite) TestCreateLanguage() {
@@ -180,36 +232,6 @@ func (s *DatabaseTestSuite) TestCrateCountry() {
 	actual, errG := s.database.GetCountry(record.CountryId)
 	s.Nil(errG)
 	s.Equal(record, actual)
-}
-func (s *DatabaseTestSuite) createRegions(continentName, regionName, subregionName string) (continent, region, subregion RegionRecord, err error) {
-	continent, err = s.database.CreateContinent(continentName)
-	if err != nil {
-		err = fmt.Errorf("create continent error: %w", err)
-		return
-	}
-	region, err = s.database.CreateRegion(regionName, continent.RegionId)
-	if err != nil {
-		err = fmt.Errorf("create region error: %w", err)
-		return
-	}
-	subregion, err = s.database.CreateRegion(subregionName, region.RegionId)
-	if err != nil {
-		err = fmt.Errorf("create soubregion error: %w", err)
-	}
-	return
-}
-func (s *DatabaseTestSuite) createCountry(continent, region, subregion string, country CountryRecord) error {
-	_, r, sr, err := s.createRegions(continent, region, subregion)
-	country.RegionId = r.RegionId
-	country.SubregionId = sr.RegionId
-	if err != nil {
-		return err
-	}
-	err = s.database.CreateCountry(&country)
-	if err != nil {
-		return fmt.Errorf("create country error: %w", err)
-	}
-	return nil
 }
 func (s *DatabaseTestSuite) TestGetCountryNotFound() {
 	country := createTestCountry()

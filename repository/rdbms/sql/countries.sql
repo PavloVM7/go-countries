@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS country_continents
 (
     country_id   SMALLINT REFERENCES countries (country_id),
     continent_id INT REFERENCES regions (region_id),
-    UNIQUE (country_id, continent_id)
+    PRIMARY KEY (country_id, continent_id)
 );
 
 CREATE TABLE IF NOT EXISTS translations
