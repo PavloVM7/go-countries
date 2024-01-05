@@ -7,6 +7,12 @@ import (
 	"strings"
 )
 
+type TldRecord struct {
+	Id        uint32
+	CountryId uint16
+	Tld       string
+}
+
 type tldDb struct {
 	db *sql.DB
 }

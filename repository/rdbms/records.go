@@ -21,32 +21,8 @@ type CountryRecord struct {
 	StartOfWeek  string
 	Status       string
 }
-type TldRecord struct {
-	Id        uint32
-	CountryId uint16
-	Tld       string
-}
 type BorderRecord struct {
 	Id         uint32
 	CountryId  uint16
 	Alpha3Code string
-}
-type RegionRecord struct {
-	RegionId   uint32
-	ParentId   uint32
-	RegionName string
-}
-
-type LanguageRecord struct {
-	LanguageId uint16
-	Language   string
-}
-
-type TranslationRecord struct {
-	Id           uint32
-	CountryId    uint16
-	LanguageId   uint16
-	Native       bool
-	OfficialName string
-	CommonName   string
 }

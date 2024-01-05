@@ -2,6 +2,15 @@ package rdbms
 
 import "database/sql"
 
+type TranslationRecord struct {
+	Id           uint32
+	CountryId    uint16
+	LanguageId   uint16
+	Native       bool
+	OfficialName string
+	CommonName   string
+}
+
 type translationDb struct {
 	db *sql.DB
 }

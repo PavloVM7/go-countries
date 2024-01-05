@@ -2,6 +2,12 @@ package rdbms
 
 import "database/sql"
 
+type RegionRecord struct {
+	RegionId   uint32
+	ParentId   uint32
+	RegionName string
+}
+
 type regionDb struct {
 	db *sql.DB
 }

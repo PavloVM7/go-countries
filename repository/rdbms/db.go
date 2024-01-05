@@ -11,6 +11,7 @@ type scannable interface {
 }
 type Database struct {
 	db *sql.DB
+	languagesDb
 	regionDb
 	translationDb
 	bordersDb
@@ -65,30 +66,6 @@ func (db *Database) rowsToRecord(scnbl scannable) (CountryRecord, error) {
 	return resul, err
 }
 
-func (db *Database) CreateLanguage(language string) (LanguageRecord, error) {
-	result := LanguageRecord{LanguageId: 0, Language: language}
-	stmt, err := db.db.Prepare("INSERT INTO languages (language) VALUES ($1) RETURNING language_id")
-	if err != nil {
-		return result, err
-	}
-	defer func(stmt *sql.Stmt) {
-		showError(stmt.Close())
-	}(stmt)
-	err = stmt.QueryRow(result.Language).Scan(&result.LanguageId)
-	return result, err
-}
-func (db *Database) GetLanguage(language string) (LanguageRecord, error) {
-	result := LanguageRecord{LanguageId: 0, Language: language}
-	stmt, err := db.db.Prepare("SELECT * FROM languages WHERE language=$1")
-	if err != nil {
-		return result, err
-	}
-	defer func(stmt *sql.Stmt) {
-		showError(stmt.Close())
-	}(stmt)
-	err = stmt.QueryRow(result.Language).Scan(&result.LanguageId, &result.Language)
-	return result, err
-}
 func (db *Database) Prepare() {
 
 }
@@ -98,6 +75,7 @@ func (db *Database) Close() error {
 func NewDatabase(db *sql.DB) *Database {
 	var result Database
 	result.db = db
+	result.languagesDb.db = db
 	result.regionDb.db = db
 	result.translationDb.db = db
 	result.bordersDb.db = db
