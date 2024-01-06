@@ -6,8 +6,23 @@ import (
 )
 
 type countryExt struct {
-	continents []string
-	borders    []string
+	continents  []string
+	borders     []string
+	capital     []string
+	capitalInfo []LatLng
+}
+
+func (c *countryExt) SetCapitalInfo(latLngs ...LatLng) {
+	c.capitalInfo = tools.CopyArray(latLngs)
+}
+func (c *countryExt) CapitalInfo() []LatLng {
+	return tools.CopyArray(c.capitalInfo)
+}
+func (c *countryExt) SetCapital(capitals ...string) {
+	c.capital = tools.CopyStringArraySkipEmpty(capitals)
+}
+func (c *countryExt) Capital() []string {
+	return tools.CopyArray(c.capital)
 }
 
 func (c *countryExt) SetContinents(continents ...string) {

@@ -5,6 +5,22 @@ import (
 	"testing"
 )
 
+func TestCountryExt_SetCapitalInfo(t *testing.T) {
+	var cext countryExt
+	expected := []LatLng{{Lat: 52.35, Lng: 4.92}}
+	cext.SetCapitalInfo(expected...)
+	actual := cext.CapitalInfo()
+	assert.Equal(t, expected, actual)
+}
+
+func TestCountryExt_SetCapital(t *testing.T) {
+	var cext countryExt
+	capitals := []string{"London ", " Dublin", ""}
+	cext.SetCapital(capitals...)
+	actual := cext.Capital()
+	assert.Equal(t, []string{"London", "Dublin"}, actual)
+}
+
 func TestCountryExt_SetContinents(t *testing.T) {
 	var cext countryExt
 	continents := []string{"Europe", "Asia", ""}
