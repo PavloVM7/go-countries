@@ -108,10 +108,6 @@ func (db *Database) Close() error {
 func NewDatabase(db *sql.DB) *Database {
 	var result Database
 	result.db = db
-	result.languagesDb.db = db
-	result.translationDb.db = db
-	result.bordersDb.db = db
-	result.tldDb.db = db
 	return &result
 }
 func showError(err error) {
