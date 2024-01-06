@@ -16,7 +16,7 @@ func Connect(host string, port int, user, password, dbname string) (*sql.DB, err
 	err = db.Ping()
 	if err != nil {
 		if er := db.Close(); er != nil {
-			err = fmt.Errorf("db error: %w, close error: %w", err, er)
+			err = fmt.Errorf("prepStmt error: %w, close error: %w", err, er)
 		}
 		return nil, err
 	}

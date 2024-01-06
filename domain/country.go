@@ -1,5 +1,7 @@
 package domain
 
+import "strings"
+
 type Country struct {
 	area        float32
 	population  uint32
@@ -17,9 +19,30 @@ type Country struct {
 	startOfWeek string
 	status      string
 	name        countryName
+	latLng      LatLng
 	countryExt
 }
 
+func (c *Country) SetStartOfWeek(startOfWeek string) {
+	c.startOfWeek = startOfWeek
+}
+func (c *Country) StartOfWeek() string {
+	return c.startOfWeek
+}
+func (c *Country) SetStatus(status string) {
+	c.status = status
+}
+func (c *Country) Status() string {
+	return c.status
+}
+func (c *Country) SetLatLng(lat, lng float32) {
+	c.latLng.Lat = lat
+	c.latLng.Lng = lng
+}
+func (c *Country) LatLng() (lat, lng float32) {
+	lat, lng = c.latLng.Lat, c.latLng.Lng
+	return
+}
 func (c *Country) Flag() string {
 	return c.flag
 }
@@ -33,10 +56,10 @@ func (c *Country) Subregion() string {
 	return c.subregion
 }
 func (c *Country) SetSubregion(subregion string) {
-	c.subregion = subregion
+	c.subregion = strings.TrimSpace(subregion)
 }
 func (c *Country) SetRegion(region string) {
-	c.region = region
+	c.region = strings.TrimSpace(region)
 }
 func (c *Country) IsUnMember() bool {
 	return c.unMember

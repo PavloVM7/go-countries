@@ -3,67 +3,100 @@ package rdbms
 import (
 	"database/sql"
 	"fmt"
+	"io"
 	"os"
+	"pm.com/go-countries/domain"
 )
 
 type scannable interface {
 	Scan(dest ...any) error
 }
+type prepStatementI interface {
+	Prepare(query string) (*sql.Stmt, error)
+}
 type Database struct {
 	db *sql.DB
 	languagesDb
-	regionDb
 	translationDb
 	bordersDb
 	tldDb
-	countryContinentsDB
 }
 
-func (db *Database) CreateCountry(record *CountryRecord) error {
-	stmt, err := db.db.Prepare(`INSERT INTO countries (country_id, alpha2_code, alpha3_code, olympic_code, 
-                       fifa_code, flag, population, area, independent, landlocked, un_member, latitude, longitude, 
-                       region_id, subregion_id, official_name, common_name, start_of_week, status) 
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
-`)
+func (db *Database) CreateNewCountry(country *domain.Country) (err error) {
+	var tx *sql.Tx
+	tx, err = db.db.Begin()
 	if err != nil {
-		return err
+		return
 	}
-	_, err = stmt.Exec(record.CountryId, record.Alpha2Code, record.Alpha3Code, record.OlympicCode, record.FifaCode,
-		record.Flag, record.Population, record.Area, record.Independent, record.Landlocked, record.UnMember,
-		record.Latitude, record.Longitude, record.RegionId, record.SubregionId, record.OfficialName, record.CommonName,
-		record.StartOfWeek, record.Status)
-	return err
+	wrapErr := func(er error) {
+		if err == nil {
+			err = fmt.Errorf("%w (country: %d:'%s')", er, country.NumericCode(), country.CommonName())
+		} else {
+			err = fmt.Errorf("%w; %w (country: %d:'%s')", err, er, country.NumericCode(), country.CommonName())
+		}
+	}
+	defer func(tx *sql.Tx) {
+		erR := tx.Rollback()
+		if erR != nil {
+			wrapErr(erR)
+		}
+	}(tx)
+
+	countryRecord := newCountryRecord(country)
+
+	continents, subregion, er := db.createRegions(tx, country.Region(), country.Subregion(), country.Continents()...)
+	if er != nil {
+		wrapErr(er)
+		return
+	}
+	ccDb := countryContinentsDB{prepStmt: tx}
+	_, er = ccDb.CreateCountryContinents(countryRecord.CountryId, continents...)
+	if er != nil {
+		wrapErr(fmt.Errorf("country-continents relations weren't created, %w", er))
+		return
+	}
+
+	countryRecord.RegionId = subregion.ParentId
+	countryRecord.SubregionId = subregion.RegionId
+
+	cdb := countriesDb{prepStmt: tx}
+	er = cdb.createCountry(&countryRecord)
+	if er != nil {
+		wrapErr(er)
+		return
+	}
+
+	if er = tx.Commit(); er != nil {
+		wrapErr(er)
+	}
+	return
 }
 
-func (db *Database) GetCountry(countryId uint16) (CountryRecord, error) {
-	var result CountryRecord
-	stmt, err := db.db.Prepare("SELECT * FROM countries WHERE country_id=$1")
+func (db *Database) createRegions(prepStmt prepStatementI, region, subregion string, continents ...string) (contIds []uint32, sub RegionRecord, err error) {
+	rdb := regionDb{prepStmt: prepStmt}
+	var conts []RegionRecord
+	conts, err = rdb.readOrCreateContinents(continents...)
 	if err != nil {
-		return result, err
+		return
 	}
-	defer func(stmt *sql.Stmt) {
-		showError(stmt.Close())
-	}(stmt)
-	rows, errQ := stmt.Query(countryId)
-	if errQ != nil {
-		return result, errQ
+	var cont RegionRecord
+	contIds = make([]uint32, 0, len(conts))
+	for _, c := range conts {
+		contIds = append(contIds, c.RegionId)
+		if c.RegionName == region {
+			cont = c
+		}
 	}
-	defer func(rows *sql.Rows) {
-		showError(rows.Close())
-	}(rows)
-	if rows.Next() {
-		return db.rowsToRecord(rows)
+	if len(conts) == 1 {
+		cont = conts[0]
 	}
-	return CountryRecord{}, fmt.Errorf("country not found by id=%d", countryId)
-}
 
-func (db *Database) rowsToRecord(scnbl scannable) (CountryRecord, error) {
-	var resul CountryRecord
-	err := scnbl.Scan(&resul.CountryId, &resul.Alpha2Code, &resul.Alpha3Code, &resul.OlympicCode, &resul.FifaCode,
-		&resul.Flag, &resul.Population, &resul.Area, &resul.Independent, &resul.Landlocked, &resul.UnMember,
-		&resul.Latitude, &resul.Longitude, &resul.RegionId, &resul.SubregionId, &resul.OfficialName, &resul.CommonName,
-		&resul.StartOfWeek, &resul.Status)
-	return resul, err
+	if cont.RegionId == 0 {
+		err = fmt.Errorf("continent not found for the region '%s'", region)
+		return
+	}
+	sub, err = rdb.readOrCreateSubregion(cont.RegionName, region, subregion)
+	return
 }
 
 func (db *Database) Prepare() {
@@ -76,15 +109,16 @@ func NewDatabase(db *sql.DB) *Database {
 	var result Database
 	result.db = db
 	result.languagesDb.db = db
-	result.regionDb.db = db
 	result.translationDb.db = db
 	result.bordersDb.db = db
 	result.tldDb.db = db
-	result.countryContinentsDB.db = db
 	return &result
 }
 func showError(err error) {
 	if err != nil {
-		_, _ = fmt.Fprintln(os.Stderr, "statement close error:", err)
+		_, _ = fmt.Fprintln(os.Stderr, "close error:", err)
 	}
+}
+func closeAndShowError(closable io.Closer) {
+	showError(closable.Close())
 }

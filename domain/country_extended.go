@@ -1,11 +1,21 @@
 package domain
 
-import "strings"
+import (
+	"pm.com/go-countries/tools"
+	"strings"
+)
 
 type countryExt struct {
-	borders []string
+	continents []string
+	borders    []string
 }
 
+func (c *countryExt) SetContinents(continents ...string) {
+	c.continents = tools.CopyStringArraySkipEmpty(continents)
+}
+func (c *countryExt) Continents() []string {
+	return tools.CopyArray(c.continents)
+}
 func (c *countryExt) Borders() []string {
 	if len(c.borders) == 0 {
 		return []string{}

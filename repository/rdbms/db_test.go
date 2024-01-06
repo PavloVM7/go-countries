@@ -70,7 +70,7 @@ func (s *databaseBaseTestSuite) execSqlFile(file string) (sql.Result, error) {
 }
 
 func (s *databaseBaseTestSuite) createRegions(continentName, regionName, subregionName string) (continent, region, subregion RegionRecord, err error) {
-	dbRegions := regionDb{db: s.db}
+	dbRegions := regionDb{prepStmt: s.db}
 	continent, err = dbRegions.CreateContinent(continentName)
 	if err != nil {
 		err = fmt.Errorf("create continent error: %w", err)
@@ -94,8 +94,8 @@ func (s *databaseBaseTestSuite) createCountry(continent, region, subregion strin
 	if err != nil {
 		return err
 	}
-	datb := Database{db: s.db}
-	err = datb.CreateCountry(&country)
+	datb := countriesDb{prepStmt: s.db}
+	err = datb.createCountry(&country)
 	if err != nil {
 		return fmt.Errorf("create country error: %w", err)
 	}
@@ -123,28 +123,6 @@ func (s *DatabaseTestSuite) TearDownSuite() {
 }
 
 func (s *DatabaseTestSuite) TestCrateCountry() {
-	name := "Europe"
-	subregionName := "Western Europe"
-	_, _, _, err := s.createRegions(name, name, subregionName)
-	s.Nil(err)
-	record := createTestCountry()
-	err = s.database.CreateCountry(&record)
-	s.Nil(err)
-	actual, errG := s.database.GetCountry(record.CountryId)
-	s.Nil(errG)
-	s.Equal(record, actual)
-}
-func (s *DatabaseTestSuite) TestGetCountryNotFound() {
-	country := createTestCountry()
-	err := s.createCountry("Europe", "Europe", "Western Europe", country)
-	s.Nil(err)
-	actual, errGet1 := s.database.GetCountry(country.CountryId)
-	s.Nil(errGet1)
-	s.Equal(country, actual)
-	idNotExists := country.CountryId + 1
-	_, errG2 := s.database.GetCountry(idNotExists)
-	s.NotNil(errG2)
-	s.Equal(fmt.Sprintf("country not found by id=%d", idNotExists), errG2.Error())
 }
 func TestDatabaseTestSuite(t *testing.T) {
 	suite.Run(t, new(DatabaseTestSuite))

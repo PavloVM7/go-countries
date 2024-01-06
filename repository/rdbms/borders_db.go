@@ -7,6 +7,12 @@ import (
 	"strings"
 )
 
+type BorderRecord struct {
+	Id         uint32
+	CountryId  uint16
+	Alpha3Code string
+}
+
 type bordersDb struct {
 	db *sql.DB
 }

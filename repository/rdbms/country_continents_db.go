@@ -18,11 +18,11 @@ func rowsToCountryContinentRecord(scn scannable) (CountryContinentRecord, error)
 }
 
 type countryContinentsDB struct {
-	db *sql.DB
+	prepStmt prepStatementI
 }
 
-func (db *countryContinentsDB) CreateCountryContinent(countryId uint16, continents ...uint32) ([]CountryContinentRecord, error) {
-	stmt, err := db.db.Prepare("INSERT INTO country_continents (country_id, continent_id) VALUES ($1,$2)")
+func (db *countryContinentsDB) CreateCountryContinents(countryId uint16, continents ...uint32) ([]CountryContinentRecord, error) {
+	stmt, err := db.prepStmt.Prepare("INSERT INTO country_continents (country_id, continent_id) VALUES ($1,$2)")
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +41,7 @@ func (db *countryContinentsDB) CreateCountryContinent(countryId uint16, continen
 }
 
 func (db *countryContinentsDB) GetContinents(countryId uint16) ([]CountryContinentRecord, error) {
-	stmt, err := db.db.Prepare("SELECT * FROM country_continents WHERE country_id=$1")
+	stmt, err := db.prepStmt.Prepare("SELECT * FROM country_continents WHERE country_id=$1")
 	if err != nil {
 		return nil, err
 	}

@@ -5,6 +5,30 @@ import (
 	"testing"
 )
 
+func TestCountry_SetStartOfWeekend(t *testing.T) {
+	country := createTestCountryFRA()
+	startOfWeek := "monday"
+	country.SetStartOfWeek(startOfWeek)
+	assert.Equal(t, startOfWeek, country.StartOfWeek())
+}
+
+func TestCountry_SetStatus(t *testing.T) {
+	country := createTestCountryFRA()
+	status := "officially-assigned"
+	country.SetStatus(status)
+	assert.Equal(t, status, country.Status())
+}
+
+func TestCountry_LatLng(t *testing.T) {
+	country := createTestCountryFRA()
+	latExp := float32(46.0)
+	lngExp := float32(2.0)
+	country.SetLatLng(latExp, lngExp)
+	lat, lng := country.LatLng()
+	assert.Equal(t, latExp, lat)
+	assert.Equal(t, lngExp, lng)
+}
+
 func TestCountry_SetFlag(t *testing.T) {
 	flag := "🇳🇱"
 	country := createTestCountryNLD()

@@ -1,6 +1,7 @@
 package rdbms
 
 import (
+	"database/sql"
 	"github.com/stretchr/testify/suite"
 	"testing"
 )
@@ -12,14 +13,34 @@ type countryContinentDbTestSuite struct {
 
 func (s *countryContinentDbTestSuite) SetupSuite() {
 	s.databaseBaseTestSuite.SetupSuite()
-	s.dtb = countryContinentsDB{db: s.db}
+	s.dtb = countryContinentsDB{prepStmt: s.db}
 }
 
-func (s *countryContinentDbTestSuite) TestCreateCountryContinent() {
+func (s *countryContinentDbTestSuite) TestCreateCountryContinents_transaction() {
 	country := createTestCountry()
 	err := s.createCountry("Europe", "Europe", "Western Europe", country)
 	s.Nil(err)
-	actual, errC := s.dtb.CreateCountryContinent(country.CountryId, 1)
+
+	tx, err := s.databaseBaseTestSuite.db.Begin()
+	s.Nil(err)
+	s.NotNil(tx)
+	defer func(tx *sql.Tx) {
+		showError(tx.Rollback())
+	}(tx)
+
+	ccDb := countryContinentsDB{prepStmt: tx}
+
+	actual, errC := ccDb.CreateCountryContinents(country.CountryId, 1)
+	s.Nil(errC)
+	err = tx.Commit()
+	s.Nil(err)
+	s.Equal([]CountryContinentRecord{{CountryId: country.CountryId, ContinentId: 1}}, actual)
+}
+func (s *countryContinentDbTestSuite) TestCreateCountryContinents() {
+	country := createTestCountry()
+	err := s.createCountry("Europe", "Europe", "Western Europe", country)
+	s.Nil(err)
+	actual, errC := s.dtb.CreateCountryContinents(country.CountryId, 1)
 	s.Nil(errC)
 	s.Equal([]CountryContinentRecord{{CountryId: country.CountryId, ContinentId: 1}}, actual)
 }
@@ -27,7 +48,7 @@ func (s *countryContinentDbTestSuite) TestCreateCountryContinentError() {
 	country := createTestCountry()
 	err := s.createCountry("Europe", "Europe", "Western Europe", country)
 	s.Nil(err)
-	actual, errC := s.dtb.CreateCountryContinent(country.CountryId, 1, 200)
+	actual, errC := s.dtb.CreateCountryContinents(country.CountryId, 1, 200)
 	s.NotNil(errC)
 	s.Nil(actual)
 }
@@ -35,7 +56,7 @@ func (s *countryContinentDbTestSuite) TestGetContinents() {
 	country := createTestCountry()
 	err := s.createCountry("Europe", "Europe", "Western Europe", country)
 	s.Nil(err)
-	expected, errC := s.dtb.CreateCountryContinent(country.CountryId, 1)
+	expected, errC := s.dtb.CreateCountryContinents(country.CountryId, 1)
 	s.Nil(errC)
 	s.Equal([]CountryContinentRecord{{CountryId: country.CountryId, ContinentId: 1}}, expected)
 	actual, errG := s.dtb.GetContinents(country.CountryId)
