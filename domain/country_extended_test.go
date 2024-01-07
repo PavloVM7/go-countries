@@ -5,6 +5,16 @@ import (
 	"testing"
 )
 
+func TestCountryExt_AddDemonym(t *testing.T) {
+	var cext countryExt
+	cext.AddDemonym(" eng ", " Dutch ", " Dutch")
+	cext.AddDemonym(" fra ", "Néerlandaise ", " Néerlandais")
+	actual := cext.Demonyms()
+	assert.Equal(t, []Demonym{
+		{"eng", "Dutch", "Dutch"},
+		{"fra", "Néerlandaise", "Néerlandais"}}, actual)
+}
+
 func TestCountryExt_AddTranslation(t *testing.T) {
 	var cext countryExt
 	cext.AddTranslation("nld ", " Nederland", "Koninkrijk der Nederlanden ", true)

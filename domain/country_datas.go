@@ -2,6 +2,11 @@ package domain
 
 import "fmt"
 
+type Demonym struct {
+	Language string
+	F        string
+	M        string
+}
 type Language struct {
 	Short string
 	Name  string

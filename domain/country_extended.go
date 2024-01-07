@@ -16,8 +16,18 @@ type countryExt struct {
 	currencies      []Currency
 	languages       []Language
 	translations    []Translation
+	demonyms        []Demonym
 }
 
+func (c *countryExt) AddDemonym(language, f, m string) {
+	language = strings.TrimSpace(language)
+	f = strings.TrimSpace(f)
+	m = strings.TrimSpace(m)
+	c.demonyms = append(c.demonyms, Demonym{Language: language, F: f, M: m})
+}
+func (c *countryExt) Demonyms() []Demonym {
+	return tools.CopyArray(c.demonyms)
+}
 func (c *countryExt) AddTranslation(language, common, official string, native bool) {
 	language = strings.TrimSpace(language)
 	common = strings.TrimSpace(common)
