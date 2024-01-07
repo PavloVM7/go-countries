@@ -15,8 +15,19 @@ type countryExt struct {
 	capitalInfo     []LatLng
 	currencies      []Currency
 	languages       []Language
+	translations    []Translation
 }
 
+func (c *countryExt) AddTranslation(language, common, official string, native bool) {
+	language = strings.TrimSpace(language)
+	common = strings.TrimSpace(common)
+	official = strings.TrimSpace(official)
+	c.translations = append(c.translations,
+		Translation{Language: language, Common: common, Official: official, Native: native})
+}
+func (c *countryExt) Translations() []Translation {
+	return tools.CopyArray(c.translations)
+}
 func (c *countryExt) AddLanguage(short, name string) {
 	short = strings.TrimSpace(short)
 	name = strings.TrimSpace(name)

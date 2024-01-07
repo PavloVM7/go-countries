@@ -5,6 +5,16 @@ import (
 	"testing"
 )
 
+func TestCountryExt_AddTranslation(t *testing.T) {
+	var cext countryExt
+	cext.AddTranslation("nld ", " Nederland", "Koninkrijk der Nederlanden ", true)
+	cext.AddTranslation("deu", "Niederlande", "Niederlande", false)
+	actual := cext.Translations()
+	assert.Equal(t, []Translation{
+		{"nld", "Nederland", "Koninkrijk der Nederlanden", true},
+		{"deu", "Niederlande", "Niederlande", false}}, actual)
+}
+
 func TestCountryExt_AddLanguage(t *testing.T) {
 	var cext countryExt
 	cext.AddLanguage(" eng ", " English  ")

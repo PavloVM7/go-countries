@@ -21,6 +21,13 @@ func (c *Currency) String() string {
 	return fmt.Sprintf("{'%s', '%s', '%s'}", c.Short, c.Name, c.Symbol)
 }
 
+type Translation struct {
+	Language string
+	Common   string
+	Official string
+	Native   bool
+}
+
 type countryName struct {
 	common   string
 	official string
