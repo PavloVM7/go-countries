@@ -19,12 +19,30 @@ type countryExt struct {
 	translations    []Translation
 	demonyms        []Demonym
 	flags           []CodeDescription
+	maps            []CodeDescription
+	coatOfArms      []CodeDescription
 }
 
-func (c *countryExt) AddFlag(language, flag string) {
-	language = strings.TrimSpace(language)
-	flag = strings.TrimSpace(flag)
-	c.flags = append(c.flags, CodeDescription{Code: language, Description: flag})
+func (c *countryExt) AddCoatOfArm(picType, ref string) {
+	picType = strings.TrimSpace(picType)
+	ref = strings.TrimSpace(ref)
+	c.coatOfArms = append(c.coatOfArms, CodeDescription{Code: picType, Description: ref})
+}
+func (c *countryExt) CoatOfArms() []CodeDescription {
+	return tools.CopyArray(c.coatOfArms)
+}
+func (c *countryExt) AddMap(name, ref string) {
+	name = strings.TrimSpace(name)
+	ref = strings.TrimSpace(ref)
+	c.maps = append(c.maps, CodeDescription{Code: name, Description: ref})
+}
+func (c *countryExt) Maps() []CodeDescription {
+	return tools.CopyArray(c.maps)
+}
+func (c *countryExt) AddFlag(pic, ref string) {
+	pic = strings.TrimSpace(pic)
+	ref = strings.TrimSpace(ref)
+	c.flags = append(c.flags, CodeDescription{Code: pic, Description: ref})
 }
 func (c *countryExt) Flags() []CodeDescription {
 	return tools.CopyArray(c.flags)
