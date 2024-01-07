@@ -5,6 +5,39 @@ import (
 	"testing"
 )
 
+func TestCountryExt_AddLanguage(t *testing.T) {
+	var cext countryExt
+	cext.AddLanguage(" eng ", " English  ")
+	cext.AddLanguage(" nld", " Dutch ")
+	cext.AddLanguage("fra ", " French  ")
+	actual := cext.Languages()
+	assert.Equal(t, []Language{
+		{"eng", "English"},
+		{"nld", "Dutch"},
+		{"fra", "French"}}, actual)
+}
+
+func TestCountryExt_SetTimezones(t *testing.T) {
+	var cext countryExt
+	cext.SetTimezones("UTC-04:00", "UTC-03:00", " UTC-01:00", " UTC UTC+01:00 ", " ", "")
+	actual := cext.Timezones()
+	assert.Equal(t, []string{"UTC-04:00", "UTC-03:00", "UTC-01:00", "UTC UTC+01:00"}, actual)
+}
+
+func TestCountryExt_SetAltSpellings(t *testing.T) {
+	var cext countryExt
+	cext.SetAltSpellings("", "NL", " Holland ", "Nederland ", " The Netherlands ")
+	actual := cext.AltSpellings()
+	assert.Equal(t, []string{"NL", "Holland", "Nederland", "The Netherlands"}, actual)
+}
+
+func TestCountryExt_SetTopLevelDomains(t *testing.T) {
+	var cext countryExt
+	cext.SetTopLevelDomains(" .fr  ", " .gp ", "\n", " ", "\t")
+	actual := cext.TopLevelDomains()
+	assert.Equal(t, []string{".fr", ".gp"}, actual)
+}
+
 func TestCountryExt_AddCurrency(t *testing.T) {
 	var cext countryExt
 	cext.AddCurrency("EUR", "Euro", "€")

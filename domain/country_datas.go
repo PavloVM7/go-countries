@@ -2,6 +2,15 @@ package domain
 
 import "fmt"
 
+type Language struct {
+	Short string
+	Name  string
+}
+
+func (l *Language) String() string {
+	return fmt.Sprintf("%s:'%s'", l.Short, l.Name)
+}
+
 type Currency struct {
 	Short  string
 	Name   string

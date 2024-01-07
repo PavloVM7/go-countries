@@ -6,14 +6,47 @@ import (
 )
 
 type countryExt struct {
-	continents  []string
-	borders     []string
-	capital     []string
-	capitalInfo []LatLng
-	currencies  []Currency
+	continents      []string
+	borders         []string
+	capital         []string
+	topLevelDomains []string
+	altSpellings    []string
+	timezones       []string
+	capitalInfo     []LatLng
+	currencies      []Currency
+	languages       []Language
 }
 
+func (c *countryExt) AddLanguage(short, name string) {
+	short = strings.TrimSpace(short)
+	name = strings.TrimSpace(name)
+	c.languages = append(c.languages, Language{Short: short, Name: name})
+}
+func (c *countryExt) Languages() []Language {
+	return tools.CopyArray(c.languages)
+}
+func (c *countryExt) SetTimezones(timezones ...string) {
+	c.timezones = tools.CopyStringArraySkipEmpty(timezones)
+}
+func (c *countryExt) Timezones() []string {
+	return tools.CopyArray(c.timezones)
+}
+func (c *countryExt) SetAltSpellings(spellings ...string) {
+	c.altSpellings = tools.CopyStringArraySkipEmpty(spellings)
+}
+func (c *countryExt) AltSpellings() []string {
+	return tools.CopyArray(c.altSpellings)
+}
+func (c *countryExt) SetTopLevelDomains(tlds ...string) {
+	c.topLevelDomains = tools.CopyStringArraySkipEmpty(tlds)
+}
+func (c *countryExt) TopLevelDomains() []string {
+	return tools.CopyArray(c.topLevelDomains)
+}
 func (c *countryExt) AddCurrency(short, name, symbol string) {
+	short = strings.TrimSpace(short)
+	name = strings.TrimSpace(name)
+	symbol = strings.TrimSpace(symbol)
 	c.currencies = append(c.currencies, Currency{Short: short, Name: name, Symbol: symbol})
 }
 func (c *countryExt) Currencies() []Currency {
