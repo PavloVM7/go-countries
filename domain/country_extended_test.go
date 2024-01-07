@@ -5,6 +5,13 @@ import (
 	"testing"
 )
 
+func TestCountryExt_SetCar(t *testing.T) {
+	var cext countryExt
+	cext.SetCar("right", " TCH", "TD ", "")
+	actual := cext.Car()
+	assert.Equal(t, Car{Side: "right", Signs: []string{"TCH", "TD"}}, actual)
+}
+
 func TestCountryExt_AddDemonym(t *testing.T) {
 	var cext countryExt
 	cext.AddDemonym(" eng ", " Dutch ", " Dutch")

@@ -6,6 +6,7 @@ import (
 )
 
 type countryExt struct {
+	car             Car
 	continents      []string
 	borders         []string
 	capital         []string
@@ -17,6 +18,14 @@ type countryExt struct {
 	languages       []Language
 	translations    []Translation
 	demonyms        []Demonym
+}
+
+func (c *countryExt) SetCar(side string, signs ...string) {
+	c.car.Side = strings.TrimSpace(side)
+	c.car.Signs = tools.CopyStringArraySkipEmpty(signs)
+}
+func (c *countryExt) Car() Car {
+	return c.car
 }
 
 func (c *countryExt) AddDemonym(language, f, m string) {

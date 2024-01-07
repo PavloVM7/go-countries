@@ -2,6 +2,14 @@ package domain
 
 import "fmt"
 
+type LanguageDescription struct {
+	Language    string
+	Description string
+}
+type Car struct {
+	Side  string // left or right
+	Signs []string
+}
 type Demonym struct {
 	Language string
 	F        string
