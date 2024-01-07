@@ -5,6 +5,16 @@ import (
 	"testing"
 )
 
+func TestCountryExt_AddFlag(t *testing.T) {
+	var cext countryExt
+	cext.AddFlag(" png", " https://flagcdn.com/w320/nl.png ")
+	cext.AddFlag("svg ", "https://flagcdn.com/nl.svg  ")
+	actual := cext.Flags()
+	assert.Equal(t, []CodeDescription{
+		{"png", "https://flagcdn.com/w320/nl.png"},
+		{"svg", "https://flagcdn.com/nl.svg"}}, actual)
+}
+
 func TestCountryExt_SetCar(t *testing.T) {
 	var cext countryExt
 	cext.SetCar("right", " TCH", "TD ", "")

@@ -18,8 +18,17 @@ type countryExt struct {
 	languages       []Language
 	translations    []Translation
 	demonyms        []Demonym
+	flags           []CodeDescription
 }
 
+func (c *countryExt) AddFlag(language, flag string) {
+	language = strings.TrimSpace(language)
+	flag = strings.TrimSpace(flag)
+	c.flags = append(c.flags, CodeDescription{Code: language, Description: flag})
+}
+func (c *countryExt) Flags() []CodeDescription {
+	return tools.CopyArray(c.flags)
+}
 func (c *countryExt) SetCar(side string, signs ...string) {
 	c.car.Side = strings.TrimSpace(side)
 	c.car.Signs = tools.CopyStringArraySkipEmpty(signs)

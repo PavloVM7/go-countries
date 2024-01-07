@@ -2,8 +2,8 @@ package domain
 
 import "fmt"
 
-type LanguageDescription struct {
-	Language    string
+type CodeDescription struct {
+	Code        string
 	Description string
 }
 type Car struct {
