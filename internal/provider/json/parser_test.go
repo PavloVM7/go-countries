@@ -34,6 +34,7 @@ func Test_parseJsonData(t *testing.T) {
 			capital = c.Capital
 			capitalLatLng = *c.LatLng
 		}
+		t.Log("currencies:", c.Currencies)
 		if len(c.Continents) != 1 {
 			t.Log(len(c.Continents), ", continents:", c.Continents, ", region:", c.Region, ", subregion:", c.Subregion, ", name:", c.Name.Common)
 		}

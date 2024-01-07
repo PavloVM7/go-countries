@@ -10,8 +10,15 @@ type countryExt struct {
 	borders     []string
 	capital     []string
 	capitalInfo []LatLng
+	currencies  []Currency
 }
 
+func (c *countryExt) AddCurrency(short, name, symbol string) {
+	c.currencies = append(c.currencies, Currency{Short: short, Name: name, Symbol: symbol})
+}
+func (c *countryExt) Currencies() []Currency {
+	return tools.CopyArray(c.currencies)
+}
 func (c *countryExt) SetCapitalInfo(latLngs ...LatLng) {
 	c.capitalInfo = tools.CopyArray(latLngs)
 }

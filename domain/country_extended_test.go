@@ -5,6 +5,19 @@ import (
 	"testing"
 )
 
+func TestCountryExt_AddCurrency(t *testing.T) {
+	var cext countryExt
+	cext.AddCurrency("EUR", "Euro", "€")
+	cext.AddCurrency("USD", "United States dollar", "$")
+	cext.AddCurrency("GBP", "British pound", "£")
+	actual := cext.Currencies()
+	assert.Equal(t, []Currency{
+		{"EUR", "Euro", "€"},
+		{"USD", "United States dollar", "$"},
+		{"GBP", "British pound", "£"},
+	}, actual)
+}
+
 func TestCountryExt_SetCapitalInfo(t *testing.T) {
 	var cext countryExt
 	expected := []LatLng{{Lat: 52.35, Lng: 4.92}}
