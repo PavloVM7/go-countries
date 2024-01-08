@@ -23,9 +23,10 @@ func (s *translationsDbTestSuite) TestCreateTranslation() {
 	s.Nil(err)
 	countryId := country.CountryId
 	language := "nld"
+	languageName := "Dutch"
 	official := "Koninkrijk der Nederlanden"
 	common := "Nederland"
-	lng, errL := s.createLanguage(language)
+	lng, errL := s.createLanguage(language, languageName)
 	s.Nil(errL)
 	actual, errT := s.dtb.CreateTransaction(countryId, lng.LanguageId, true, official, common)
 	s.Nil(errT)
@@ -38,9 +39,10 @@ func (s *translationsDbTestSuite) TestCreateTranslationNotNativeName() {
 	s.Nil(err)
 	countryId := country.CountryId
 	language := "nld"
+	languageName := "Dutch"
 	official := "Koninkrijk der Nederlanden"
 	common := "Nederland"
-	lng, errL := s.createLanguage(language)
+	lng, errL := s.createLanguage(language, languageName)
 	s.Nil(errL)
 	actual, errT := s.dtb.CreateTransaction(countryId, lng.LanguageId, true, official, common)
 	s.Nil(errT)
@@ -51,7 +53,7 @@ func (s *translationsDbTestSuite) TestCreateTranslationNotNativeName() {
 	s.Equal(TranslationRecord{Id: 2, CountryId: countryId, LanguageId: lng.LanguageId, Native: false,
 		OfficialName: official, CommonName: common}, actual2)
 }
-func (s *translationsDbTestSuite) createLanguage(language string) (LanguageRecord, error) {
+func (s *translationsDbTestSuite) createLanguage(language, languageName string) (LanguageRecord, error) {
 	langDb := languagesDb{db: s.db}
-	return langDb.CreateLanguage(language)
+	return langDb.CreateLanguage(language, languageName)
 }
