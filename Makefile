@@ -1,4 +1,6 @@
 GOBIN = ./build/bin
+redis:
+	docker compose up redis
 db-tests:
 	docker compose up -d postgres
 	go test -v ./repository/rdbms/...
