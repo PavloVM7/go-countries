@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/suite"
 	"os"
-	"pm.com/go-countries/configs/db"
+	"pm.com/go-countries/internal/config/db"
 	"testing"
 )
 

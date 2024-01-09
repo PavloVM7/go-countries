@@ -33,11 +33,13 @@ func (cache *languageCache) readLanguageByCode(languageCode string) (langId uint
 	wrapErr := func(er error) {
 		err = wrapLanguageErr(er, codeKey, languageCode, langName)
 	}
-	if errors.Is(err, redis.Nil) {
-		wrapErr(ErrNotFound)
+	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			wrapErr(ErrNotFound)
+		} else {
+			wrapErr(err)
+		}
 		return
-	} else if err != nil {
-		wrapErr(err)
 	}
 	if strId == "" {
 		wrapErr(ErrNotFound)
@@ -54,7 +56,6 @@ func (cache *languageCache) readLanguageByCode(languageCode string) (langId uint
 	langName, err = cache.rdb.HGet(ctx, idKey, name).Result()
 	if err != nil {
 		wrapErr(err)
-		return
 	}
 	return
 }

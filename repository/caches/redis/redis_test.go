@@ -6,7 +6,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/suite"
 	"os"
-	"pm.com/go-countries/configs/caches"
+	"pm.com/go-countries/internal/config/caches"
 	"testing"
 	"time"
 )
