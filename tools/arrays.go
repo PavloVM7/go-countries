@@ -20,11 +20,11 @@ func CopyStringArraySkipEmpty(source []string) []string {
 	copy(res, result)
 	return res
 }
-func CopyArray[T any](source []T) []T {
-	if len(source) == 0 {
-		return source
+func CopyArray[S ~[]T, T any](source S) S {
+	if source == nil {
+		return nil
 	}
-	result := make([]T, len(source))
+	result := make(S, len(source))
 	copy(result, source)
 	return result
 }

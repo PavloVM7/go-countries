@@ -27,3 +27,16 @@ func TestCopyArray_int(t *testing.T) {
 	assert.Equal(t, expected, actual)
 	assert.NotSame(t, expected, actual)
 }
+
+func TestCopyArray_empty(t *testing.T) {
+	expected := make([]string, 0)
+	actual := CopyArray(expected)
+	assert.Equal(t, expected, actual)
+	assert.NotSame(t, expected, actual)
+}
+
+func TestCopyArray_nil(t *testing.T) {
+	var expected []interface{}
+	actual := CopyArray(expected)
+	assert.Nil(t, actual)
+}
