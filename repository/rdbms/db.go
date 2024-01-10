@@ -49,12 +49,6 @@ func (db *Database) CreateNewCountry(country *domain.Country) (err error) {
 		wrapErr(er)
 		return
 	}
-	ccDb := countryContinentsDB{prepStmt: tx}
-	_, er = ccDb.CreateCountryContinents(countryRecord.CountryId, continents...)
-	if er != nil {
-		wrapErr(fmt.Errorf("country-continents relations weren't created, %w", er))
-		return
-	}
 
 	countryRecord.RegionId = subregion.ParentId
 	countryRecord.SubregionId = subregion.RegionId
@@ -63,6 +57,13 @@ func (db *Database) CreateNewCountry(country *domain.Country) (err error) {
 	er = cdb.createCountry(&countryRecord)
 	if er != nil {
 		wrapErr(er)
+		return
+	}
+
+	ccDb := countryContinentsDB{prepStmt: tx}
+	_, er = ccDb.CreateCountryContinents(countryRecord.CountryId, continents...)
+	if er != nil {
+		wrapErr(fmt.Errorf("country-continents relations weren't created, %w", er))
 		return
 	}
 
