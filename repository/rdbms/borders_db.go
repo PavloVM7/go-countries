@@ -14,11 +14,11 @@ type BorderRecord struct {
 }
 
 type bordersDb struct {
-	db *sql.DB
+	prepStmt prepStatementI
 }
 
-func (db *bordersDb) GetBorders(countryId uint16) ([]BorderRecord, error) {
-	stmt, err := db.db.Prepare("SELECT * FROM borders WHERE country_id=$1")
+func (db *bordersDb) readCountryBorders(countryId uint16) ([]BorderRecord, error) {
+	stmt, err := db.prepStmt.Prepare("SELECT * FROM borders WHERE country_id=$1")
 	if err != nil {
 		return nil, err
 	}
@@ -47,8 +47,8 @@ func (db *bordersDb) toBorderRecord(scn scannable) (BorderRecord, error) {
 	err := scn.Scan(&res.Id, &res.CountryId, &res.Alpha3Code)
 	return res, err
 }
-func (db *bordersDb) CreteBorders(countryId uint16, borders ...string) ([]BorderRecord, error) {
-	stmt, err := db.db.Prepare("INSERT INTO borders (country_id, alpha3_code) VALUES ($1, $2) RETURNING id")
+func (db *bordersDb) createBorders(countryId uint16, borders ...string) ([]BorderRecord, error) {
+	stmt, err := db.prepStmt.Prepare("INSERT INTO borders (country_id, alpha3_code) VALUES ($1, $2) RETURNING id")
 	if err != nil {
 		return nil, err
 	}

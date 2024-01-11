@@ -45,6 +45,25 @@ func newCountryRecord(country *domain.Country) CountryRecord {
 	result.Latitude, result.Longitude = country.LatLng()
 	return result
 }
+func newCountry(record *CountryRecord) (country domain.Country, regionId uint32, subregionId uint32) {
+	country = domain.NewCountry(record.CountryId, record.Alpha2Code, record.Alpha3Code)
+	country.SetName(record.CommonName, record.OfficialName)
+	country.SetFifa(record.FifaCode)
+	country.SetOlympicCode(record.OlympicCode)
+	country.SetFlag(record.Flag)
+	country.SetStartOfWeek(record.StartOfWeek)
+	country.SetPopulation(record.Population)
+	country.SetArea(record.Area)
+	country.SetLatLng(record.Latitude, record.Longitude)
+	country.SetLandlocked(record.Landlocked)
+	country.SetIndependent(record.Independent)
+	country.SetUnMember(record.UnMember)
+	country.SetStatus(record.Status)
+
+	regionId = record.RegionId
+	subregionId = record.SubregionId
+	return
+}
 
 func toCountryRecord(scn scannable, result *CountryRecord) error {
 	return scn.Scan(&result.CountryId, &result.Alpha2Code, &result.Alpha3Code, &result.OlympicCode, &result.FifaCode,

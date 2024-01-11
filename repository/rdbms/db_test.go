@@ -127,7 +127,25 @@ func (s *DatabaseTestSuite) TestCrateCountry() {
 	country := createTestCountry()
 	err := s.database.CreateNewCountry(&country)
 	s.Nil(err)
-
+	cdb := countriesDb{prepStmt: s.db}
+	record, errR := cdb.selectCountry(country.NumericCode())
+	s.Nil(errR)
+	expected := createTestCountryRecord()
+	s.Equal(expected, record)
+}
+func (s *DatabaseTestSuite) TestReadCountry() {
+	country := createTestCountry()
+	err := s.database.CreateNewCountry(&country)
+	s.Nil(err)
+	actual, continents, regionId, subregionId, errR := s.database.ReadCountry(country.NumericCode())
+	s.Nil(errR)
+	country.SetRegion("")
+	country.SetSubregion("")
+	country.SetContinents([]string(nil)...)
+	s.Equal(country, actual)
+	s.EqualValues(2, regionId)
+	s.EqualValues(3, subregionId)
+	s.EqualValues([]uint32{1}, continents)
 }
 func TestDatabaseTestSuite(t *testing.T) {
 	suite.Run(t, new(DatabaseTestSuite))

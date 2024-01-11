@@ -12,7 +12,7 @@ type bordersDbTestSuite struct {
 
 func (s *bordersDbTestSuite) SetupSuite() {
 	s.databaseBaseTestSuite.SetupSuite()
-	s.dtb = bordersDb{db: s.db}
+	s.dtb = bordersDb{prepStmt: s.db}
 }
 func Test_bordersDbTestSuite(t *testing.T) {
 	suite.Run(t, new(bordersDbTestSuite))
@@ -22,7 +22,7 @@ func (s *bordersDbTestSuite) TestCreateBorders() {
 	err := s.createCountry("Europe", "Europe", "Western Europe", country)
 	s.Nil(err)
 	borders := []string{"BEL", "DEU"}
-	actual, errB := s.dtb.CreteBorders(country.CountryId, borders...)
+	actual, errB := s.dtb.createBorders(country.CountryId, borders...)
 	s.Nil(errB)
 	expected := []BorderRecord{
 		{Id: 1, CountryId: country.CountryId, Alpha3Code: borders[0]},
@@ -35,11 +35,11 @@ func (s *bordersDbTestSuite) TestCreateBorders1duplicate() {
 	err := s.createCountry("Europe", "Europe", "Western Europe", country)
 	s.Nil(err)
 	borders := []string{"BEL", "DEU"}
-	actual1, err1 := s.dtb.CreteBorders(country.CountryId, borders[0])
+	actual1, err1 := s.dtb.createBorders(country.CountryId, borders[0])
 	s.Nil(err1)
 	expected1 := []BorderRecord{{Id: 1, CountryId: country.CountryId, Alpha3Code: borders[0]}}
 	s.Equal(expected1, actual1)
-	actual2, err2 := s.dtb.CreteBorders(country.CountryId, borders...)
+	actual2, err2 := s.dtb.createBorders(country.CountryId, borders...)
 	s.NotNil(err2)
 	expected2 := []BorderRecord{{Id: 3, CountryId: country.CountryId, Alpha3Code: borders[1]}}
 	s.Equal(expected2, actual2)
@@ -49,14 +49,14 @@ func (s *bordersDbTestSuite) TestCreateBordersDuplicate() {
 	err := s.createCountry("Europe", "Europe", "Western Europe", country)
 	s.Nil(err)
 	borders := []string{"BEL", "DEU"}
-	actual1, err1 := s.dtb.CreteBorders(country.CountryId, borders...)
+	actual1, err1 := s.dtb.createBorders(country.CountryId, borders...)
 	s.Nil(err1)
 	expected1 := []BorderRecord{
 		{Id: 1, CountryId: country.CountryId, Alpha3Code: borders[0]},
 		{Id: 2, CountryId: country.CountryId, Alpha3Code: borders[1]},
 	}
 	s.Equal(expected1, actual1)
-	actual2, err2 := s.dtb.CreteBorders(country.CountryId, borders...)
+	actual2, err2 := s.dtb.createBorders(country.CountryId, borders...)
 	s.NotNil(err2)
 	s.NotNil(actual2)
 	s.Equal(0, len(actual2))
@@ -66,14 +66,14 @@ func (s *bordersDbTestSuite) TestGetBorders() {
 	err := s.createCountry("Europe", "Europe", "Western Europe", country)
 	s.Nil(err)
 	borders := []string{"BEL", "DEU"}
-	actual1, err1 := s.dtb.CreteBorders(country.CountryId, borders...)
+	actual1, err1 := s.dtb.createBorders(country.CountryId, borders...)
 	s.Nil(err1)
 	expected1 := []BorderRecord{
 		{Id: 1, CountryId: country.CountryId, Alpha3Code: borders[0]},
 		{Id: 2, CountryId: country.CountryId, Alpha3Code: borders[1]},
 	}
 	s.Equal(expected1, actual1)
-	actual2, err2 := s.dtb.GetBorders(country.CountryId)
+	actual2, err2 := s.dtb.readCountryBorders(country.CountryId)
 	s.Nil(err2)
 	s.Equal(expected1, actual2)
 }
@@ -82,14 +82,14 @@ func (s *bordersDbTestSuite) TestGetBordersNotExist() {
 	err := s.createCountry("Europe", "Europe", "Western Europe", country)
 	s.Nil(err)
 	borders := []string{"BEL", "DEU"}
-	actual1, err1 := s.dtb.CreteBorders(country.CountryId, borders...)
+	actual1, err1 := s.dtb.createBorders(country.CountryId, borders...)
 	s.Nil(err1)
 	expected1 := []BorderRecord{
 		{Id: 1, CountryId: country.CountryId, Alpha3Code: borders[0]},
 		{Id: 2, CountryId: country.CountryId, Alpha3Code: borders[1]},
 	}
 	s.Equal(expected1, actual1)
-	actual2, err2 := s.dtb.GetBorders(country.CountryId + 1)
+	actual2, err2 := s.dtb.readCountryBorders(country.CountryId + 1)
 	s.Nil(err2)
 	s.Equal([]BorderRecord{}, actual2)
 }

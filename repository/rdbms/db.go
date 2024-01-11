@@ -19,22 +19,17 @@ type Database struct {
 	db *sql.DB
 	languagesDb
 	translationDb
-	bordersDb
 	tldDb
 }
 
 func (db *Database) CreateNewCountry(country *domain.Country) (err error) {
-	var tx *sql.Tx
-	tx, err = db.db.Begin()
-	if err != nil {
-		return
-	}
+	tx, er := db.db.Begin()
 	wrapErr := func(er error) {
-		if err == nil {
-			err = fmt.Errorf("%w (country: %d:'%s')", er, country.NumericCode(), country.CommonName())
-		} else {
-			err = fmt.Errorf("%w; %w (country: %d:'%s')", err, er, country.NumericCode(), country.CommonName())
-		}
+		err = wrapCountryError(err, er, country.NumericCode(), country.Alpha3Code(), country.CommonName())
+	}
+	if er != nil {
+		wrapErr(er)
+		return
 	}
 	defer func(tx *sql.Tx) {
 		erR := tx.Rollback()
@@ -62,15 +57,57 @@ func (db *Database) CreateNewCountry(country *domain.Country) (err error) {
 	}
 
 	ccDb := countryContinentsDB{prepStmt: tx}
-	_, er = ccDb.CreateCountryContinents(countryRecord.CountryId, continents...)
+	_, er = ccDb.createCountryContinents(countryRecord.CountryId, continents...)
 	if er != nil {
 		wrapErr(fmt.Errorf("country-continents relations weren't created, %w", er))
 		return
 	}
 
+	bdb := bordersDb{prepStmt: tx}
+	_, er = bdb.createBorders(countryRecord.CountryId, country.Borders()...)
+	if er != nil {
+		wrapErr(er)
+		return
+	}
 	if er = tx.Commit(); er != nil {
 		wrapErr(er)
 	}
+	return
+}
+
+func (db *Database) ReadCountry(countryId uint16) (country domain.Country, continents []uint32, regionId, subregionId uint32, err error) {
+	wrapErr := func(er error) {
+		err = wrapCountryError(err, er, countryId, country.Alpha3Code(), country.CommonName())
+	}
+
+	cdb := countriesDb{prepStmt: db.db}
+	record, er := cdb.selectCountry(countryId)
+	if er != nil {
+		wrapErr(er)
+		return
+	}
+	country, regionId, subregionId = newCountry(&record)
+	contDb := countryContinentsDB{prepStmt: db.db}
+	regRecords, erC := contDb.readCountryContinents(countryId)
+	if erC != nil {
+		wrapErr(erC)
+		return
+	}
+	continents = make([]uint32, 0, len(regRecords))
+	for _, r := range regRecords {
+		continents = append(continents, r.ContinentId)
+	}
+	bdb := bordersDb{prepStmt: db.db}
+	borderRecords, erB := bdb.readCountryBorders(countryId)
+	if erB != nil {
+		wrapErr(erB)
+		return
+	}
+	borders := make([]string, 0, len(borderRecords))
+	for _, b := range borderRecords {
+		borders = append(borders, b.Alpha3Code)
+	}
+	country.SetBorders(borders...)
 	return
 }
 
@@ -111,6 +148,13 @@ func NewDatabase(db *sql.DB) *Database {
 	var result Database
 	result.db = db
 	return &result
+}
+func wrapCountryError(baseErr, newErr error, countryId uint16, countryCode, countryName string) error {
+	if baseErr == nil {
+		return fmt.Errorf("%w (country: %d:%s:'%s')", newErr, countryId, countryCode, countryName)
+	} else {
+		return fmt.Errorf("%w; %w (country: %d:%s:'%s')", baseErr, newErr, countryId, countryCode, countryName)
+	}
 }
 func showError(err error) {
 	if err != nil {

@@ -30,7 +30,7 @@ func (s *countryContinentDbTestSuite) TestCreateCountryContinents_transaction() 
 
 	ccDb := countryContinentsDB{prepStmt: tx}
 
-	actual, errC := ccDb.CreateCountryContinents(country.CountryId, 1)
+	actual, errC := ccDb.createCountryContinents(country.CountryId, 1)
 	s.Nil(errC)
 	err = tx.Commit()
 	s.Nil(err)
@@ -40,7 +40,7 @@ func (s *countryContinentDbTestSuite) TestCreateCountryContinents() {
 	country := createTestCountryRecord()
 	err := s.createCountry("Europe", "Europe", "Western Europe", country)
 	s.Nil(err)
-	actual, errC := s.dtb.CreateCountryContinents(country.CountryId, 1)
+	actual, errC := s.dtb.createCountryContinents(country.CountryId, 1)
 	s.Nil(errC)
 	s.Equal([]CountryContinentRecord{{CountryId: country.CountryId, ContinentId: 1}}, actual)
 }
@@ -48,7 +48,7 @@ func (s *countryContinentDbTestSuite) TestCreateCountryContinentError() {
 	country := createTestCountryRecord()
 	err := s.createCountry("Europe", "Europe", "Western Europe", country)
 	s.Nil(err)
-	actual, errC := s.dtb.CreateCountryContinents(country.CountryId, 1, 200)
+	actual, errC := s.dtb.createCountryContinents(country.CountryId, 1, 200)
 	s.NotNil(errC)
 	s.Nil(actual)
 }
@@ -56,10 +56,10 @@ func (s *countryContinentDbTestSuite) TestGetContinents() {
 	country := createTestCountryRecord()
 	err := s.createCountry("Europe", "Europe", "Western Europe", country)
 	s.Nil(err)
-	expected, errC := s.dtb.CreateCountryContinents(country.CountryId, 1)
+	expected, errC := s.dtb.createCountryContinents(country.CountryId, 1)
 	s.Nil(errC)
 	s.Equal([]CountryContinentRecord{{CountryId: country.CountryId, ContinentId: 1}}, expected)
-	actual, errG := s.dtb.GetContinents(country.CountryId)
+	actual, errG := s.dtb.readCountryContinents(country.CountryId)
 	s.Nil(errG)
 	s.Equal(expected, actual)
 }

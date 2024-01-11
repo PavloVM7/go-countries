@@ -21,7 +21,7 @@ type countryContinentsDB struct {
 	prepStmt prepStatementI
 }
 
-func (db *countryContinentsDB) CreateCountryContinents(countryId uint16, continents ...uint32) ([]CountryContinentRecord, error) {
+func (db *countryContinentsDB) createCountryContinents(countryId uint16, continents ...uint32) ([]CountryContinentRecord, error) {
 	stmt, err := db.prepStmt.Prepare("INSERT INTO country_continents (country_id, continent_id) VALUES ($1,$2)")
 	if err != nil {
 		return nil, err
@@ -40,7 +40,7 @@ func (db *countryContinentsDB) CreateCountryContinents(countryId uint16, contine
 	return result.ToArray(), nil
 }
 
-func (db *countryContinentsDB) GetContinents(countryId uint16) ([]CountryContinentRecord, error) {
+func (db *countryContinentsDB) readCountryContinents(countryId uint16) ([]CountryContinentRecord, error) {
 	stmt, err := db.prepStmt.Prepare("SELECT * FROM country_continents WHERE country_id=$1")
 	if err != nil {
 		return nil, err
