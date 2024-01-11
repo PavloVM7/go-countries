@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/suite"
 	"os"
+	"pm.com/go-countries/domain"
 	"pm.com/go-countries/internal/config/db"
 	"testing"
 )
@@ -123,12 +124,38 @@ func (s *DatabaseTestSuite) TearDownSuite() {
 }
 
 func (s *DatabaseTestSuite) TestCrateCountry() {
+	country := createTestCountry()
+	err := s.database.CreateNewCountry(&country)
+	s.Nil(err)
+
 }
 func TestDatabaseTestSuite(t *testing.T) {
 	suite.Run(t, new(DatabaseTestSuite))
 }
 
-func createTestCountry() CountryRecord {
+func createTestCountry() domain.Country {
+	result := domain.NewCountry(528, "NL", "NLD")
+	result.SetName("Netherlands", "Kingdom of the Netherlands")
+	result.SetContinents("Europe")
+	result.SetRegion("Europe")
+	result.SetSubregion("Western Europe")
+	result.SetLatLng(52.5, 5.75)
+	result.SetFlag("🇳🇱")
+	result.SetPopulation(16655799)
+	result.SetArea(41850)
+	result.SetStatus("officially-assigned")
+	result.SetIndependent(true)
+	result.SetLandlocked(false)
+	result.SetUnMember(true)
+	result.SetStartOfWeek("monday")
+	result.SetFifa("NED")
+	result.SetOlympicCode("NED")
+	result.SetBorders("BEL", "DEU")
+
+	return result
+}
+
+func createTestCountryRecord() CountryRecord {
 	return CountryRecord{CountryId: 528, Alpha2Code: "NL", Alpha3Code: "NLD", OlympicCode: "NED", FifaCode: "NED",
 		Flag: "🇳🇱", Population: 16655799, Area: 41850.0, Independent: true, Landlocked: false, UnMember: true,
 		Latitude: 52.5, Longitude: 5.75, RegionId: 2, SubregionId: 3,

@@ -18,7 +18,7 @@ func Test_translationsDbTestSuite(t *testing.T) {
 	suite.Run(t, new(translationsDbTestSuite))
 }
 func (s *translationsDbTestSuite) TestCreateTranslation() {
-	country := createTestCountry()
+	country := createTestCountryRecord()
 	err := s.createCountry("Europe", "Europe", "Western Europe", country)
 	s.Nil(err)
 	countryId := country.CountryId
@@ -34,7 +34,7 @@ func (s *translationsDbTestSuite) TestCreateTranslation() {
 		OfficialName: official, CommonName: common}, actual)
 }
 func (s *translationsDbTestSuite) TestCreateTranslationNotNativeName() {
-	country := createTestCountry()
+	country := createTestCountryRecord()
 	err := s.createCountry("Europe", "Europe", "Western Europe", country)
 	s.Nil(err)
 	countryId := country.CountryId

@@ -2,6 +2,7 @@ package rdbms
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -37,8 +38,8 @@ func (db *Database) CreateNewCountry(country *domain.Country) (err error) {
 	}
 	defer func(tx *sql.Tx) {
 		erR := tx.Rollback()
-		if erR != nil {
-			wrapErr(erR)
+		if erR != nil && !errors.Is(erR, sql.ErrTxDone) {
+			wrapErr(fmt.Errorf("rollback error: %w", erR))
 		}
 	}(tx)
 

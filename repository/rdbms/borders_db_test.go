@@ -18,7 +18,7 @@ func Test_bordersDbTestSuite(t *testing.T) {
 	suite.Run(t, new(bordersDbTestSuite))
 }
 func (s *bordersDbTestSuite) TestCreateBorders() {
-	country := createTestCountry()
+	country := createTestCountryRecord()
 	err := s.createCountry("Europe", "Europe", "Western Europe", country)
 	s.Nil(err)
 	borders := []string{"BEL", "DEU"}
@@ -31,7 +31,7 @@ func (s *bordersDbTestSuite) TestCreateBorders() {
 	s.Equal(expected, actual)
 }
 func (s *bordersDbTestSuite) TestCreateBorders1duplicate() {
-	country := createTestCountry()
+	country := createTestCountryRecord()
 	err := s.createCountry("Europe", "Europe", "Western Europe", country)
 	s.Nil(err)
 	borders := []string{"BEL", "DEU"}
@@ -45,7 +45,7 @@ func (s *bordersDbTestSuite) TestCreateBorders1duplicate() {
 	s.Equal(expected2, actual2)
 }
 func (s *bordersDbTestSuite) TestCreateBordersDuplicate() {
-	country := createTestCountry()
+	country := createTestCountryRecord()
 	err := s.createCountry("Europe", "Europe", "Western Europe", country)
 	s.Nil(err)
 	borders := []string{"BEL", "DEU"}
@@ -62,7 +62,7 @@ func (s *bordersDbTestSuite) TestCreateBordersDuplicate() {
 	s.Equal(0, len(actual2))
 }
 func (s *bordersDbTestSuite) TestGetBorders() {
-	country := createTestCountry()
+	country := createTestCountryRecord()
 	err := s.createCountry("Europe", "Europe", "Western Europe", country)
 	s.Nil(err)
 	borders := []string{"BEL", "DEU"}
@@ -78,7 +78,7 @@ func (s *bordersDbTestSuite) TestGetBorders() {
 	s.Equal(expected1, actual2)
 }
 func (s *bordersDbTestSuite) TestGetBordersNotExist() {
-	country := createTestCountry()
+	country := createTestCountryRecord()
 	err := s.createCountry("Europe", "Europe", "Western Europe", country)
 	s.Nil(err)
 	borders := []string{"BEL", "DEU"}

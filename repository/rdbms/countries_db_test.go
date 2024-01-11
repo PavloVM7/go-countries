@@ -17,7 +17,7 @@ func (s *countriesDbTestSuite) SetupSuite() {
 }
 
 func (s *countriesDbTestSuite) TestGetCountryNotFound() {
-	country := createTestCountry()
+	country := createTestCountryRecord()
 	err := s.createCountry("Europe", "Europe", "Western Europe", country)
 	s.Nil(err)
 	actual, errGet1 := s.dtb.selectCountry(country.CountryId)
@@ -34,7 +34,7 @@ func (s *countriesDbTestSuite) Test_createCountry() {
 	subregionName := "Western Europe"
 	_, _, _, err := s.createRegions(name, name, subregionName)
 	s.Nil(err)
-	record := createTestCountry()
+	record := createTestCountryRecord()
 	err = s.dtb.createCountry(&record)
 	s.Nil(err)
 	actual, errG := s.dtb.selectCountry(record.CountryId)

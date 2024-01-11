@@ -19,7 +19,7 @@ func Test_tldDbTestSuite(t *testing.T) {
 }
 
 func (s *tldDbTestSuite) TestCreateTopLevelDomains() {
-	country := createTestCountry()
+	country := createTestCountryRecord()
 	err := s.createCountry("Europe", "Europe", "Western Europe", country)
 	s.Nil(err)
 	tlds := []string{".nl ", ".nld"}
@@ -32,7 +32,7 @@ func (s *tldDbTestSuite) TestCreateTopLevelDomains() {
 	s.Equal(expected, actual)
 }
 func (s *tldDbTestSuite) TestGetTopLevelDomains() {
-	country := createTestCountry()
+	country := createTestCountryRecord()
 	err := s.createCountry("Europe", "Europe", "Western Europe", country)
 	s.Nil(err)
 	tlds := []string{".nl ", ".nld"}
@@ -48,7 +48,7 @@ func (s *tldDbTestSuite) TestGetTopLevelDomains() {
 	s.Equal(actual, actual2)
 }
 func (s *tldDbTestSuite) TestGetTopLevelDomainsNotExist() {
-	country := createTestCountry()
+	country := createTestCountryRecord()
 	err := s.createCountry("Europe", "Europe", "Western Europe", country)
 	s.Nil(err)
 	tlds := []string{".nl ", ".nld"}

@@ -17,7 +17,7 @@ func (s *countryContinentDbTestSuite) SetupSuite() {
 }
 
 func (s *countryContinentDbTestSuite) TestCreateCountryContinents_transaction() {
-	country := createTestCountry()
+	country := createTestCountryRecord()
 	err := s.createCountry("Europe", "Europe", "Western Europe", country)
 	s.Nil(err)
 
@@ -37,7 +37,7 @@ func (s *countryContinentDbTestSuite) TestCreateCountryContinents_transaction() 
 	s.Equal([]CountryContinentRecord{{CountryId: country.CountryId, ContinentId: 1}}, actual)
 }
 func (s *countryContinentDbTestSuite) TestCreateCountryContinents() {
-	country := createTestCountry()
+	country := createTestCountryRecord()
 	err := s.createCountry("Europe", "Europe", "Western Europe", country)
 	s.Nil(err)
 	actual, errC := s.dtb.CreateCountryContinents(country.CountryId, 1)
@@ -45,7 +45,7 @@ func (s *countryContinentDbTestSuite) TestCreateCountryContinents() {
 	s.Equal([]CountryContinentRecord{{CountryId: country.CountryId, ContinentId: 1}}, actual)
 }
 func (s *countryContinentDbTestSuite) TestCreateCountryContinentError() {
-	country := createTestCountry()
+	country := createTestCountryRecord()
 	err := s.createCountry("Europe", "Europe", "Western Europe", country)
 	s.Nil(err)
 	actual, errC := s.dtb.CreateCountryContinents(country.CountryId, 1, 200)
@@ -53,7 +53,7 @@ func (s *countryContinentDbTestSuite) TestCreateCountryContinentError() {
 	s.Nil(actual)
 }
 func (s *countryContinentDbTestSuite) TestGetContinents() {
-	country := createTestCountry()
+	country := createTestCountryRecord()
 	err := s.createCountry("Europe", "Europe", "Western Europe", country)
 	s.Nil(err)
 	expected, errC := s.dtb.CreateCountryContinents(country.CountryId, 1)
