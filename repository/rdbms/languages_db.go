@@ -35,12 +35,8 @@ func (db *languagesDb) readOrCrateLanguage(language, languageName string) (langu
 		}
 		defer closeAndShowError(stmtInsert)
 		err = insertRecord(stmtInsert, &record)
-		if err != nil {
-			if pqErr := toPqError(err); pqErr != nil {
-				if pqErr.Code == UniqueViolationCode {
-					err = db.readAndUpdateLanguageRecord(stmtSelect, &record)
-				}
-			}
+		if err != nil && isErrorUniqueViolation(err) {
+			err = db.readAndUpdateLanguageRecord(stmtSelect, &record)
 		}
 	}
 	return record, err

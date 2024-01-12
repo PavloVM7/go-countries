@@ -4,18 +4,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/lib/pq"
-	"io"
-	"os"
 	"pm.com/go-countries/domain"
 )
 
 var (
 	ErrDuplicateKey = errors.New("duplicate key")
-)
-
-const (
-	UniqueViolationCode = "23505"
 )
 
 type scannable interface {
@@ -55,8 +48,8 @@ func (db *Database) CreateNewCountry(country *domain.Country) (err error) {
 		return
 	}
 
-	countryRecord.RegionId = subregion.ParentId
-	countryRecord.SubregionId = subregion.RegionId
+	countryRecord.RegionId = subregion.parentId
+	countryRecord.SubregionId = subregion.regionId
 
 	cdb := countriesDb{prepStmt: tx}
 	er = cdb.createCountry(&countryRecord)
@@ -95,18 +88,18 @@ func (db *Database) createCountryContinents(prepStmt prepStatementI, countryId u
 	}
 	return nil
 }
-func (db *Database) createRegions(prepStmt prepStatementI, region, subregion string, continents ...string) (contIds []uint32, sub RegionRecord, err error) {
+func (db *Database) createRegions(prepStmt prepStatementI, region, subregion string, continents ...string) (contIds []uint32, sub regionRecord, err error) {
 	rdb := regionDb{prepStmt: prepStmt}
-	var conts []RegionRecord
+	var conts []regionRecord
 	conts, err = rdb.readOrCreateContinents(continents...)
 	if err != nil {
 		return
 	}
-	var cont RegionRecord
+	var cont regionRecord
 	contIds = make([]uint32, 0, len(conts))
 	for _, c := range conts {
-		contIds = append(contIds, c.RegionId)
-		if c.RegionName == region {
+		contIds = append(contIds, c.regionId)
+		if c.regionName == region {
 			cont = c
 		}
 	}
@@ -114,15 +107,15 @@ func (db *Database) createRegions(prepStmt prepStatementI, region, subregion str
 		cont = conts[0]
 	}
 
-	if cont.RegionId == 0 {
+	if cont.regionId == 0 {
 		err = fmt.Errorf("continent not found for the region '%s'", region)
 		return
 	}
-	sub, err = rdb.readOrCreateSubregion(cont.RegionName, region, subregion)
+	sub, err = rdb.readOrCreateSubregion(cont.regionName, region, subregion)
 	return
 }
 
-func (db *Database) ReadCountry(countryId uint16) (country domain.Country, continents []uint32, regionId, subregionId uint32, err error) {
+func (db *Database) ReadCountry(countryId uint16) (country domain.Country, regionId, subregionId uint32, err error) {
 	wrapErr := func(er error) {
 		err = wrapCountryError(err, er, countryId, country.Alpha3Code(), country.CommonName())
 	}
@@ -134,15 +127,9 @@ func (db *Database) ReadCountry(countryId uint16) (country domain.Country, conti
 		return
 	}
 	country, regionId, subregionId = newCountry(&record)
-	contDb := countryContinentsDB{prepStmt: db.db}
-	regRecords, erC := contDb.readCountryContinents(countryId)
-	if erC != nil {
-		wrapErr(erC)
+	if er = db.readCountryContinents(&country); er != nil {
+		wrapErr(er)
 		return
-	}
-	continents = make([]uint32, 0, len(regRecords))
-	for _, r := range regRecords {
-		continents = append(continents, r.ContinentId)
 	}
 	bdb := bordersDb{prepStmt: db.db}
 	borderRecords, erB := bdb.readCountryBorders(countryId)
@@ -157,7 +144,28 @@ func (db *Database) ReadCountry(countryId uint16) (country domain.Country, conti
 	country.SetBorders(borders...)
 	return
 }
-
+func (db *Database) readCountryContinents(country *domain.Country) error {
+	contDb := countryContinentsDB{prepStmt: db.db}
+	regRecords, err := contDb.readCountryContinents(country.NumericCode())
+	if err != nil {
+		return err
+	}
+	continents := make([]uint32, 0, len(regRecords))
+	for _, r := range regRecords {
+		continents = append(continents, r.ContinentId)
+	}
+	regDb := regionDb{prepStmt: db.db}
+	contRecs, errC := regDb.readRegionsByIds(continents...)
+	if errC != nil {
+		return errC
+	}
+	contStrs := make([]string, 0, len(contRecs))
+	for _, rec := range contRecs {
+		contStrs = append(contStrs, rec.regionName)
+	}
+	country.SetContinents(contStrs...)
+	return nil
+}
 func (db *Database) Prepare() {
 
 }
@@ -175,20 +183,4 @@ func wrapCountryError(baseErr, newErr error, countryId uint16, countryCode, coun
 	} else {
 		return fmt.Errorf("%w; %w (country: %d:%s:'%s')", baseErr, newErr, countryId, countryCode, countryName)
 	}
-}
-func showError(err error) {
-	if err != nil {
-		_, _ = fmt.Fprintln(os.Stderr, "close error:", err)
-	}
-}
-func toPqError(err error) *pq.Error {
-	var pqErr *pq.Error
-	if errors.As(err, &pqErr) {
-		return pqErr
-	}
-	return nil
-}
-
-func closeAndShowError(closable io.Closer) {
-	showError(closable.Close())
 }

@@ -70,19 +70,19 @@ func (s *databaseBaseTestSuite) execSqlFile(file string) (sql.Result, error) {
 	return s.db.Exec(string(bts))
 }
 
-func (s *databaseBaseTestSuite) createRegions(continentName, regionName, subregionName string) (continent, region, subregion RegionRecord, err error) {
+func (s *databaseBaseTestSuite) createRegions(continentName, regionName, subregionName string) (continent, region, subregion regionRecord, err error) {
 	dbRegions := regionDb{prepStmt: s.db}
 	continent, err = dbRegions.CreateContinent(continentName)
 	if err != nil {
 		err = fmt.Errorf("create continent error: %w", err)
 		return
 	}
-	region, err = dbRegions.CreateRegion(regionName, continent.RegionId)
+	region, err = dbRegions.CreateRegion(regionName, continent.regionId)
 	if err != nil {
 		err = fmt.Errorf("create region error: %w", err)
 		return
 	}
-	subregion, err = dbRegions.CreateRegion(subregionName, region.RegionId)
+	subregion, err = dbRegions.CreateRegion(subregionName, region.regionId)
 	if err != nil {
 		err = fmt.Errorf("create soubregion error: %w", err)
 	}
@@ -90,8 +90,8 @@ func (s *databaseBaseTestSuite) createRegions(continentName, regionName, subregi
 }
 func (s *databaseBaseTestSuite) createCountry(continent, region, subregion string, country CountryRecord) error {
 	_, r, sr, err := s.createRegions(continent, region, subregion)
-	country.RegionId = r.RegionId
-	country.SubregionId = sr.RegionId
+	country.RegionId = r.regionId
+	country.SubregionId = sr.regionId
 	if err != nil {
 		return err
 	}
@@ -137,15 +137,13 @@ func (s *DatabaseTestSuite) TestReadCountry() {
 	country := createTestCountry()
 	err := s.database.CreateNewCountry(&country)
 	s.Nil(err)
-	actual, continents, regionId, subregionId, errR := s.database.ReadCountry(country.NumericCode())
+	actual, regionId, subregionId, errR := s.database.ReadCountry(country.NumericCode())
 	s.Nil(errR)
 	country.SetRegion("")
 	country.SetSubregion("")
-	country.SetContinents([]string(nil)...)
 	s.Equal(country, actual)
 	s.EqualValues(2, regionId)
 	s.EqualValues(3, subregionId)
-	s.EqualValues([]uint32{1}, continents)
 }
 func TestDatabaseTestSuite(t *testing.T) {
 	suite.Run(t, new(DatabaseTestSuite))
