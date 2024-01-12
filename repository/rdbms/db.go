@@ -4,9 +4,18 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/lib/pq"
 	"io"
 	"os"
 	"pm.com/go-countries/domain"
+)
+
+var (
+	ErrDuplicateKey = errors.New("duplicate key")
+)
+
+const (
+	UniqueViolationCode = "23505"
 )
 
 type scannable interface {
@@ -56,22 +65,60 @@ func (db *Database) CreateNewCountry(country *domain.Country) (err error) {
 		return
 	}
 
-	ccDb := countryContinentsDB{prepStmt: tx}
-	_, er = ccDb.createCountryContinents(countryRecord.CountryId, continents...)
-	if er != nil {
-		wrapErr(fmt.Errorf("country-continents relations weren't created, %w", er))
+	if er = db.createCountryContinents(tx, countryRecord.CountryId, continents...); er != nil {
+		wrapErr(er)
 		return
 	}
 
-	bdb := bordersDb{prepStmt: tx}
-	_, er = bdb.createBorders(countryRecord.CountryId, country.Borders()...)
-	if er != nil {
+	if er = db.createCountryBorders(tx, countryRecord.CountryId, country.Borders()...); er != nil {
 		wrapErr(er)
 		return
 	}
 	if er = tx.Commit(); er != nil {
 		wrapErr(er)
 	}
+	return
+}
+
+func (db *Database) createCountryBorders(prepStmt prepStatementI, countryId uint16, borders ...string) error {
+	bdb := bordersDb{prepStmt: prepStmt}
+	if _, err := bdb.createBorders(countryId, borders...); err != nil {
+		return fmt.Errorf("country-borders relations weren't created, %w", err)
+	}
+	return nil
+}
+func (db *Database) createCountryContinents(prepStmt prepStatementI, countryId uint16, continents ...uint32) error {
+	tdb := countryContinentsDB{prepStmt: prepStmt}
+	_, err := tdb.createCountryContinents(countryId, continents...)
+	if err != nil {
+		return fmt.Errorf("country-continents relations weren't created, %w", err)
+	}
+	return nil
+}
+func (db *Database) createRegions(prepStmt prepStatementI, region, subregion string, continents ...string) (contIds []uint32, sub RegionRecord, err error) {
+	rdb := regionDb{prepStmt: prepStmt}
+	var conts []RegionRecord
+	conts, err = rdb.readOrCreateContinents(continents...)
+	if err != nil {
+		return
+	}
+	var cont RegionRecord
+	contIds = make([]uint32, 0, len(conts))
+	for _, c := range conts {
+		contIds = append(contIds, c.RegionId)
+		if c.RegionName == region {
+			cont = c
+		}
+	}
+	if len(conts) == 1 {
+		cont = conts[0]
+	}
+
+	if cont.RegionId == 0 {
+		err = fmt.Errorf("continent not found for the region '%s'", region)
+		return
+	}
+	sub, err = rdb.readOrCreateSubregion(cont.RegionName, region, subregion)
 	return
 }
 
@@ -111,33 +158,6 @@ func (db *Database) ReadCountry(countryId uint16) (country domain.Country, conti
 	return
 }
 
-func (db *Database) createRegions(prepStmt prepStatementI, region, subregion string, continents ...string) (contIds []uint32, sub RegionRecord, err error) {
-	rdb := regionDb{prepStmt: prepStmt}
-	var conts []RegionRecord
-	conts, err = rdb.readOrCreateContinents(continents...)
-	if err != nil {
-		return
-	}
-	var cont RegionRecord
-	contIds = make([]uint32, 0, len(conts))
-	for _, c := range conts {
-		contIds = append(contIds, c.RegionId)
-		if c.RegionName == region {
-			cont = c
-		}
-	}
-	if len(conts) == 1 {
-		cont = conts[0]
-	}
-
-	if cont.RegionId == 0 {
-		err = fmt.Errorf("continent not found for the region '%s'", region)
-		return
-	}
-	sub, err = rdb.readOrCreateSubregion(cont.RegionName, region, subregion)
-	return
-}
-
 func (db *Database) Prepare() {
 
 }
@@ -161,6 +181,14 @@ func showError(err error) {
 		_, _ = fmt.Fprintln(os.Stderr, "close error:", err)
 	}
 }
+func toPqError(err error) *pq.Error {
+	var pqErr *pq.Error
+	if errors.As(err, &pqErr) {
+		return pqErr
+	}
+	return nil
+}
+
 func closeAndShowError(closable io.Closer) {
 	showError(closable.Close())
 }
