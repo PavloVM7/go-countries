@@ -29,9 +29,7 @@ func (db *bordersDb) readCountryBorders(countryId uint16) ([]BorderRecord, error
 	if errQ != nil {
 		return nil, errQ
 	}
-	defer func(rows *sql.Rows) {
-		showError(rows.Close())
-	}(rows)
+	defer closeWithShowError(rows)
 	result := lists.NewLinkedList[BorderRecord]()
 	for rows.Next() {
 		if record, er := db.toBorderRecord(rows); er == nil {

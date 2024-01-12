@@ -50,9 +50,7 @@ func (db *tldDb) GetTopLevelDomains(countryId uint16) ([]TldRecord, error) {
 	if errQ != nil {
 		return nil, errQ
 	}
-	defer func(rows *sql.Rows) {
-		showError(stmt.Close())
-	}(rows)
+	defer closeWithShowError(rows)
 	result := lists.NewLinkedList[TldRecord]()
 	for rows.Next() {
 		rec, er := db.toTopLevelDomain(rows)

@@ -19,9 +19,6 @@ type prepStatementI interface {
 }
 type Database struct {
 	db *sql.DB
-	languagesDb
-	translationDb
-	tldDb
 }
 
 func (db *Database) CreateNewCountry(country *domain.Country) (err error) {
@@ -62,7 +59,10 @@ func (db *Database) CreateNewCountry(country *domain.Country) (err error) {
 		wrapErr(er)
 		return
 	}
-
+	if er = db.createCountyCapitals(tx, countryRecord.CountryId, country.Capital()...); er != nil {
+		wrapErr(er)
+		return
+	}
 	if er = db.createCountryBorders(tx, countryRecord.CountryId, country.Borders()...); er != nil {
 		wrapErr(er)
 		return
@@ -77,6 +77,13 @@ func (db *Database) createCountryBorders(prepStmt prepStatementI, countryId uint
 	bdb := bordersDb{prepStmt: prepStmt}
 	if _, err := bdb.createBorders(countryId, borders...); err != nil {
 		return fmt.Errorf("country-borders relations weren't created, %w", err)
+	}
+	return nil
+}
+func (db *Database) createCountyCapitals(prepStmt prepStatementI, countryId uint16, capitals ...string) error {
+	cdb := countryCapitalsDB{prepStmt: prepStmt}
+	if _, err := cdb.createCapitals(countryId, capitals...); err != nil {
+		return fmt.Errorf("country-capitals relations weren't created, %w", err)
 	}
 	return nil
 }
@@ -127,22 +134,65 @@ func (db *Database) ReadCountry(countryId uint16) (country domain.Country, regio
 		return
 	}
 	country, regionId, subregionId = newCountry(&record)
+
 	if er = db.readCountryContinents(&country); er != nil {
 		wrapErr(er)
 		return
 	}
-	bdb := bordersDb{prepStmt: db.db}
-	borderRecords, erB := bdb.readCountryBorders(countryId)
-	if erB != nil {
-		wrapErr(erB)
+	if er = db.readCountryRegionSubregion(&country, regionId, subregionId); er != nil {
+		wrapErr(er)
 		return
+	}
+	if er = db.readCountryCapitals(&country); er != nil {
+		wrapErr(er)
+		return
+	}
+	if er = db.readCountryBorders(&country); er != nil {
+		wrapErr(er)
+		return
+	}
+	return
+}
+func (db *Database) readCountryCapitals(country *domain.Country) error {
+	cdb := countryCapitalsDB{prepStmt: db.db}
+	capitalRecords, err := cdb.readCountryCapitals(country.NumericCode())
+	if err != nil {
+		return err
+	}
+	capitals := make([]string, 0, len(capitalRecords))
+	for _, c := range capitalRecords {
+		capitals = append(capitals, c.capital)
+	}
+	country.SetCapital(capitals...)
+	return nil
+}
+func (db *Database) readCountryBorders(country *domain.Country) error {
+	bdb := bordersDb{prepStmt: db.db}
+	borderRecords, err := bdb.readCountryBorders(country.NumericCode())
+	if err != nil {
+		return err
 	}
 	borders := make([]string, 0, len(borderRecords))
 	for _, b := range borderRecords {
 		borders = append(borders, b.Alpha3Code)
 	}
 	country.SetBorders(borders...)
-	return
+	return nil
+}
+func (db *Database) readCountryRegionSubregion(country *domain.Country, regionId, subregionId uint32) error {
+	regDb := regionDb{prepStmt: db.db}
+	records, errC := regDb.readRegionsByIds(regionId, subregionId)
+	if errC != nil {
+		return errC
+	}
+	for _, record := range records {
+		if record.regionId == regionId {
+			country.SetRegion(record.regionName)
+		} else if record.regionId == subregionId {
+			country.SetSubregion(record.regionName)
+		}
+	}
+	return nil
 }
 func (db *Database) readCountryContinents(country *domain.Country) error {
 	contDb := countryContinentsDB{prepStmt: db.db}

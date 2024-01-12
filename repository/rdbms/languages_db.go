@@ -26,14 +26,14 @@ func (db *languagesDb) readOrCrateLanguage(language, languageName string) (langu
 	if err != nil {
 		return record, wrapLanguageError(err, record)
 	}
-	defer closeAndShowError(stmtSelect)
+	defer closeWithShowError(stmtSelect)
 	err = db.readAndUpdateLanguageRecord(stmtSelect, &record)
 	if err != nil && errors.Is(err, sql.ErrNoRows) {
 		stmtInsert, er := db.prepareInsertLanguage()
 		if er != nil {
 			return record, wrapLanguageError(er, record)
 		}
-		defer closeAndShowError(stmtInsert)
+		defer closeWithShowError(stmtInsert)
 		err = insertRecord(stmtInsert, &record)
 		if err != nil && isErrorUniqueViolation(err) {
 			err = db.readAndUpdateLanguageRecord(stmtSelect, &record)
@@ -46,7 +46,7 @@ func (db *languagesDb) updateLanguageRecord(record *languageRecord) error {
 	if err != nil {
 		return err
 	}
-	defer closeAndShowError(stmt)
+	defer closeWithShowError(stmt)
 	return updateRecord(stmt, record)
 }
 func (db *languagesDb) createLanguage(language, languageName string) (languageRecord, error) {
@@ -55,7 +55,7 @@ func (db *languagesDb) createLanguage(language, languageName string) (languageRe
 	if err != nil {
 		return result, err
 	}
-	defer closeAndShowError(stmt)
+	defer closeWithShowError(stmt)
 	err = insertRecord(stmt, &result)
 	return result, err
 }
@@ -65,7 +65,7 @@ func (db *languagesDb) readeLanguage(language string) (languageRecord, error) {
 	if err != nil {
 		return result, err
 	}
-	defer closeAndShowError(stmt)
+	defer closeWithShowError(stmt)
 	err = selectRecord(stmt, &result)
 	return result, err
 }

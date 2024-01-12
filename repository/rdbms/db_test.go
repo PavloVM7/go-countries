@@ -72,11 +72,12 @@ func (s *databaseBaseTestSuite) execSqlFile(file string) (sql.Result, error) {
 
 func (s *databaseBaseTestSuite) createRegions(continentName, regionName, subregionName string) (continent, region, subregion regionRecord, err error) {
 	dbRegions := regionDb{prepStmt: s.db}
-	continent, err = dbRegions.CreateContinent(continentName)
-	if err != nil {
-		err = fmt.Errorf("create continent error: %w", err)
+	conts, er := dbRegions.readOrCreateContinents(continentName)
+	if er != nil {
+		err = fmt.Errorf("create continent error: %w", er)
 		return
 	}
+	continent = conts[0]
 	region, err = dbRegions.CreateRegion(regionName, continent.regionId)
 	if err != nil {
 		err = fmt.Errorf("create region error: %w", err)
@@ -139,8 +140,6 @@ func (s *DatabaseTestSuite) TestReadCountry() {
 	s.Nil(err)
 	actual, regionId, subregionId, errR := s.database.ReadCountry(country.NumericCode())
 	s.Nil(errR)
-	country.SetRegion("")
-	country.SetSubregion("")
 	s.Equal(country, actual)
 	s.EqualValues(2, regionId)
 	s.EqualValues(3, subregionId)
@@ -167,6 +166,8 @@ func createTestCountry() domain.Country {
 	result.SetFifa("NED")
 	result.SetOlympicCode("NED")
 	result.SetBorders("BEL", "DEU")
+
+	result.SetCapital("Amsterdam")
 
 	return result
 }

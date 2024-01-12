@@ -5,16 +5,17 @@ import (
 	"errors"
 	"fmt"
 	"github.com/PavloVM7/go-collections/pkg/collections/lists"
+	"github.com/lib/pq"
 )
 
-type RegionRecord struct {
-	RegionId   uint32
-	ParentId   uint32
-	RegionName string
+type regionRecord struct {
+	regionId   uint32
+	parentId   uint32
+	regionName string
 }
 
-func toRegionRecord(scn scannable, result *RegionRecord) error {
-	return scn.Scan(&result.RegionId, &result.ParentId, &result.RegionName)
+func toRegionRecord(scn scannable, result *regionRecord) error {
+	return scn.Scan(&result.regionId, &result.parentId, &result.regionName)
 }
 
 const (
@@ -35,26 +36,30 @@ WHERE s.region_name = $1 AND s.parent_id = r.region_id AND r.parent_id = c.regio
 WHERE s.region_name = $2 AND s.parent_id = r.region_id AND r.region_name = $1 AND r.parent_id = c.region_id AND c.region_id = 0`
 
 	insertRegion = "INSERT INTO regions (parent_id, region_name) VALUES ($1, $2) RETURNING region_id"
+
+	selectRegionByIds = `SELECT region_id, parent_id, region_name FROM regions WHERE region_id = ANY ($1)`
 )
 
 type regionDb struct {
 	prepStmt prepStatementI
 }
 
-func (db *regionDb) readOrCreateSubregion(continent, region, subregion string) (RegionRecord, error) {
+func (db *regionDb) readOrCreateSubregion(continent, region, subregion string) (regionRecord, error) {
 	var (
-		sub        RegionRecord
+		sub        regionRecord
 		stmtSelect *sql.Stmt
 		err        error
 	)
-	sub.RegionName = subregion
+	sub.regionName = subregion
 	stmtSelect, err = db.prepStmt.Prepare(selectSubregionByNames)
 	if err != nil {
 		return sub, err
 	}
-	defer closeAndShowError(stmtSelect)
-	row := stmtSelect.QueryRow(region, subregion)
-	err = toRegionRecord(row, &sub)
+	defer closeWithShowError(stmtSelect)
+	selSubregion := func(sub *regionRecord) error {
+		return toRegionRecord(stmtSelect.QueryRow(region, subregion), sub)
+	}
+	err = selSubregion(&sub)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			err = nil
@@ -62,26 +67,31 @@ func (db *regionDb) readOrCreateSubregion(continent, region, subregion string) (
 			if errR != nil {
 				err = fmt.Errorf("couldn't get/create region '%s/%s', '%w'", region, continent, errR)
 			}
-			sub.ParentId = reg.RegionId
+			sub.parentId = reg.regionId
 			err = db.insertRegion(&sub)
+			if err != nil && isErrorUniqueViolation(err) {
+				err = selSubregion(&sub)
+			}
 		}
 	}
 	return sub, err
 }
-func (db *regionDb) readOrCreateRegion(continent, region string) (RegionRecord, error) {
+func (db *regionDb) readOrCreateRegion(continent, region string) (regionRecord, error) {
 	var (
-		reg        RegionRecord
+		reg        regionRecord
 		stmtSelect *sql.Stmt
 		err        error
 	)
-	reg.RegionName = region
+	reg.regionName = region
 	stmtSelect, err = db.prepStmt.Prepare(selectRegionByNames)
 	if err != nil {
 		return reg, err
 	}
-	defer closeAndShowError(stmtSelect)
-	row := stmtSelect.QueryRow(continent, region)
-	err = toRegionRecord(row, &reg)
+	defer closeWithShowError(stmtSelect)
+	selRegion := func(reg *regionRecord) error {
+		return toRegionRecord(stmtSelect.QueryRow(continent, region), reg)
+	}
+	err = selRegion(&reg)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			err = nil
@@ -94,13 +104,16 @@ func (db *regionDb) readOrCreateRegion(continent, region string) (RegionRecord, 
 			if err != nil {
 				return reg, err
 			}
-			reg.ParentId = continents[0].RegionId
+			reg.parentId = continents[0].regionId
 			err = db.insertRegion(&reg)
+			if err != nil && isErrorUniqueViolation(err) {
+				err = selRegion(&reg)
+			}
 		}
 	}
 	return reg, err
 }
-func (db *regionDb) readOrCreateContinents(continents ...string) ([]RegionRecord, error) {
+func (db *regionDb) readOrCreateContinents(continents ...string) ([]regionRecord, error) {
 	var (
 		stmtSelect *sql.Stmt
 		stmtInsert *sql.Stmt
@@ -111,22 +124,25 @@ func (db *regionDb) readOrCreateContinents(continents ...string) ([]RegionRecord
 	if err != nil {
 		return nil, err
 	}
-	defer closeAndShowError(stmtSelect)
+	defer closeWithShowError(stmtSelect)
 	stmtInsert, err = db.prepStmt.Prepare(insertRegion)
 	if err != nil {
 		return nil, err
 	}
-	defer closeAndShowError(stmtInsert)
-	result := lists.NewLinkedList[RegionRecord]()
+	defer closeWithShowError(stmtInsert)
+	selContinent := func(reg *regionRecord) error {
+		return toRegionRecord(stmtSelect.QueryRow(reg.regionName), reg)
+	}
+	result := lists.NewLinkedList[regionRecord]()
 	for _, continent := range continents {
-		row := stmtSelect.QueryRow(continent)
-		reg := RegionRecord{}
-		err = toRegionRecord(row, &reg)
+		reg := regionRecord{parentId: 0, regionName: continent}
+		err = selContinent(&reg)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
-				reg.RegionName = continent
-				reg.ParentId = 0
-				err = db.insertQueryAndScanRegion(stmtInsert, &reg)
+				err = insertRegionRecord(stmtInsert, &reg)
+				if err != nil && isErrorUniqueViolation(err) {
+					err = selContinent(&reg)
+				}
 				if err != nil {
 					return nil, err
 				}
@@ -138,49 +154,69 @@ func (db *regionDb) readOrCreateContinents(continents ...string) ([]RegionRecord
 	}
 	return result.ToArray(), nil
 }
-func (db *regionDb) GetSubregion(name string) (RegionRecord, error) {
+func (db *regionDb) getSubregion(name string) (regionRecord, error) {
 	return db.getRegion(selectSubregion, name)
 }
-func (db *regionDb) GetRegion(name string) (RegionRecord, error) {
+func (db *regionDb) GetRegion(name string) (regionRecord, error) {
 	return db.getRegion(selectRegion, name)
 }
-func (db *regionDb) GetContinent(name string) (RegionRecord, error) {
+func (db *regionDb) getContinent(name string) (regionRecord, error) {
 	return db.getRegion(selectContinent, name)
 }
-
-func (db *regionDb) getRegion(sqlRequest, name string) (RegionRecord, error) {
-	result := RegionRecord{RegionId: 0, ParentId: 0, RegionName: name}
+func (db *regionDb) readRegionsByIds(ids ...uint32) ([]regionRecord, error) {
+	stmtSelect, err := db.prepStmt.Prepare(selectRegionByIds)
+	if err != nil {
+		return nil, err
+	}
+	defer closeWithShowError(stmtSelect)
+	rows, er := stmtSelect.Query(pq.Array(ids))
+	if er != nil {
+		return nil, er
+	}
+	defer closeWithShowError(rows)
+	result := lists.NewLinkedList[regionRecord]()
+	for rows.Next() {
+		reg := regionRecord{}
+		if err = toRegionRecord(rows, &reg); err != nil {
+			return nil, err
+		}
+		result.AddLast(reg)
+	}
+	return result.ToArray(), nil
+}
+func (db *regionDb) getRegion(sqlRequest, name string) (regionRecord, error) {
+	result := regionRecord{regionId: 0, parentId: 0, regionName: name}
 	stmt, err := db.prepStmt.Prepare(sqlRequest)
 	if err != nil {
 		return result, err
 	}
-	defer closeAndShowError(stmt)
-	row := stmt.QueryRow(result.RegionName)
+	defer closeWithShowError(stmt)
+	row := stmt.QueryRow(result.regionName)
 	err = toRegionRecord(row, &result)
 	return result, err
 }
-func (db *regionDb) CreateContinent(name string) (RegionRecord, error) {
+func (db *regionDb) CreateContinent(name string) (regionRecord, error) {
 	return db.CreateRegion(name, 0)
 }
 
-func (db *regionDb) CreateRegion(name string, parentId uint32) (RegionRecord, error) {
-	result := RegionRecord{RegionId: 0, ParentId: parentId, RegionName: name}
+func (db *regionDb) CreateRegion(name string, parentId uint32) (regionRecord, error) {
+	result := regionRecord{regionId: 0, parentId: parentId, regionName: name}
 	stmt, err := db.prepStmt.Prepare(insertRegion)
 	if err != nil {
 		return result, err
 	}
-	defer closeAndShowError(stmt)
-	err = db.insertQueryAndScanRegion(stmt, &result)
+	defer closeWithShowError(stmt)
+	err = insertRegionRecord(stmt, &result)
 	return result, err
 }
-func (db *regionDb) insertRegion(record *RegionRecord) error {
+func (db *regionDb) insertRegion(record *regionRecord) error {
 	stmtInsert, err := db.prepStmt.Prepare(insertRegion)
 	if err != nil {
 		return err
 	}
-	defer closeAndShowError(stmtInsert)
-	return db.insertQueryAndScanRegion(stmtInsert, record)
+	defer closeWithShowError(stmtInsert)
+	return insertRegionRecord(stmtInsert, record)
 }
-func (db *regionDb) insertQueryAndScanRegion(insertStmt *sql.Stmt, record *RegionRecord) error {
-	return insertStmt.QueryRow(record.ParentId, record.RegionName).Scan(&record.RegionId)
+func insertRegionRecord(insertStmt *sql.Stmt, record *regionRecord) error {
+	return insertStmt.QueryRow(record.parentId, record.regionName).Scan(&record.regionId)
 }

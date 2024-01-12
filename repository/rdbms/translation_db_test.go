@@ -28,9 +28,9 @@ func (s *translationsDbTestSuite) TestCreateTranslation() {
 	common := "Nederland"
 	lng, errL := s.createLanguage(language, languageName)
 	s.Nil(errL)
-	actual, errT := s.dtb.CreateTransaction(countryId, lng.LanguageId, true, official, common)
+	actual, errT := s.dtb.CreateTransaction(countryId, lng.languageId, true, official, common)
 	s.Nil(errT)
-	s.Equal(TranslationRecord{Id: 1, CountryId: countryId, LanguageId: lng.LanguageId, Native: true,
+	s.Equal(TranslationRecord{Id: 1, CountryId: countryId, LanguageId: lng.languageId, Native: true,
 		OfficialName: official, CommonName: common}, actual)
 }
 func (s *translationsDbTestSuite) TestCreateTranslationNotNativeName() {
@@ -44,16 +44,16 @@ func (s *translationsDbTestSuite) TestCreateTranslationNotNativeName() {
 	common := "Nederland"
 	lng, errL := s.createLanguage(language, languageName)
 	s.Nil(errL)
-	actual, errT := s.dtb.CreateTransaction(countryId, lng.LanguageId, true, official, common)
+	actual, errT := s.dtb.CreateTransaction(countryId, lng.languageId, true, official, common)
 	s.Nil(errT)
-	s.Equal(TranslationRecord{Id: 1, CountryId: countryId, LanguageId: lng.LanguageId, Native: true,
+	s.Equal(TranslationRecord{Id: 1, CountryId: countryId, LanguageId: lng.languageId, Native: true,
 		OfficialName: official, CommonName: common}, actual)
-	actual2, errT2 := s.dtb.CreateTransaction(countryId, lng.LanguageId, false, official, common)
+	actual2, errT2 := s.dtb.CreateTransaction(countryId, lng.languageId, false, official, common)
 	s.Nil(errT2)
-	s.Equal(TranslationRecord{Id: 2, CountryId: countryId, LanguageId: lng.LanguageId, Native: false,
+	s.Equal(TranslationRecord{Id: 2, CountryId: countryId, LanguageId: lng.languageId, Native: false,
 		OfficialName: official, CommonName: common}, actual2)
 }
-func (s *translationsDbTestSuite) createLanguage(language, languageName string) (LanguageRecord, error) {
-	langDb := languagesDb{db: s.db}
-	return langDb.CreateLanguage(language, languageName)
+func (s *translationsDbTestSuite) createLanguage(language, languageName string) (languageRecord, error) {
+	langDb := languagesDb{prepStmt: s.db}
+	return langDb.createLanguage(language, languageName)
 }

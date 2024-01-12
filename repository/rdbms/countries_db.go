@@ -20,7 +20,7 @@ func (db *countriesDb) createCountry(record *CountryRecord) error {
 	if err != nil {
 		return err
 	}
-	defer closeAndShowError(stmt)
+	defer closeWithShowError(stmt)
 	_, err = stmt.Exec(record.CountryId, record.Alpha2Code, record.Alpha3Code, record.OlympicCode, record.FifaCode,
 		record.Flag, record.Population, record.Area, record.Independent, record.Landlocked, record.UnMember,
 		record.Latitude, record.Longitude, record.RegionId, record.SubregionId, record.OfficialName, record.CommonName,
@@ -33,7 +33,7 @@ func (db *countriesDb) selectCountry(countryId uint16) (CountryRecord, error) {
 	if err != nil {
 		return result, err
 	}
-	defer closeAndShowError(stmt)
+	defer closeWithShowError(stmt)
 	err = toCountryRecord(stmt.QueryRow(countryId), &result)
 	if err != nil {
 		return result, fmt.Errorf("country not found by id=%d", countryId)

@@ -52,6 +52,7 @@ func (db *countryContinentsDB) readCountryContinents(countryId uint16) ([]Countr
 	if errQ != nil {
 		return nil, fmt.Errorf("%w (country:%d)", errQ, countryId)
 	}
+	defer closeWithShowError(rows)
 	result := lists.NewLinkedList[CountryContinentRecord]()
 	for rows.Next() {
 		record, er := rowsToCountryContinentRecord(rows)

@@ -25,7 +25,7 @@ func toPqError(err error) *pq.Error {
 	return nil
 }
 
-func closeAndShowError(closable io.Closer) {
+func closeWithShowError(closable io.Closer) {
 	showError(closable.Close())
 }
 func isErrorUniqueViolation(err error) bool {
