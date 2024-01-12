@@ -17,7 +17,7 @@ func toLanguageRecord(scn scannable, result *languageRecord) error {
 }
 
 type languagesDb struct {
-	db *sql.DB
+	prepStmt prepStatementI
 }
 
 func (db *languagesDb) readOrCrateLanguage(language, languageName string) (languageRecord, error) {
@@ -92,14 +92,14 @@ func (db *languagesDb) readAndUpdateLanguageRecord(stmSelect *sql.Stmt, record *
 	return nil
 }
 func (db *languagesDb) prepareUpdateLanguage() (*sql.Stmt, error) {
-	return db.db.Prepare("UPDATE languages SET language_name = $2 WHERE language = $1")
+	return db.prepStmt.Prepare("UPDATE languages SET language_name = $2 WHERE language = $1")
 }
 
 func (db *languagesDb) prepareInsertLanguage() (*sql.Stmt, error) {
-	return db.db.Prepare("INSERT INTO languages (language, language_name) VALUES ($1, $2) RETURNING language_id")
+	return db.prepStmt.Prepare("INSERT INTO languages (language, language_name) VALUES ($1, $2) RETURNING language_id")
 }
 func (db *languagesDb) prepareSelectLanguage() (*sql.Stmt, error) {
-	return db.db.Prepare("SELECT * FROM languages WHERE language = $1")
+	return db.prepStmt.Prepare("SELECT * FROM languages WHERE language = $1")
 }
 
 func insertRecord(stmt *sql.Stmt, record *languageRecord) error {

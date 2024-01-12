@@ -13,7 +13,7 @@ type languagesDbTestSuite struct {
 
 func (s *languagesDbTestSuite) SetupSuite() {
 	s.databaseBaseTestSuite.SetupSuite()
-	s.dtb = languagesDb{db: s.db}
+	s.dtb = languagesDb{prepStmt: s.db}
 }
 func Test_languagesDbTestSuite(t *testing.T) {
 	suite.Run(t, new(languagesDbTestSuite))
