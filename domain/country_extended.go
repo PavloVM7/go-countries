@@ -1,7 +1,9 @@
 package domain
 
 import (
+	"github.com/PavloVM7/go-collections/pkg/collections"
 	"pm.com/go-countries/tools"
+	"slices"
 	"strings"
 )
 
@@ -116,8 +118,18 @@ func (c *countryExt) CapitalInfo() []LatLng {
 	return tools.CopyArray(c.capitalInfo)
 }
 func (c *countryExt) SetCapital(capitals ...string) {
-	c.capital = tools.CopyStringArraySkipEmpty(capitals)
+	filtered := tools.CopyStringArraySkipEmpty(capitals)
+	c.capital = make([]string, 0, len(filtered))
+	set := collections.NewSetItems[string](filtered...)
+	for _, capital := range filtered {
+		if set.Contains(capital) {
+			c.capital = append(c.capital, capital)
+			set.Remove(capital)
+		}
+	}
+	c.capital = slices.Clip(c.capital)
 }
+
 func (c *countryExt) Capital() []string {
 	return tools.CopyArray(c.capital)
 }

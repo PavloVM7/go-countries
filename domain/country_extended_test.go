@@ -103,6 +103,13 @@ func TestCountryExt_SetCapital(t *testing.T) {
 	actual := cext.Capital()
 	assert.Equal(t, []string{"London", "Dublin"}, actual)
 }
+func TestCountryExt_SetCapital_duplicate(t *testing.T) {
+	var cext countryExt
+	capitals := []string{"London ", " Dublin", "", "London ", " Dublin"}
+	cext.SetCapital(capitals...)
+	actual := cext.Capital()
+	assert.Equal(t, []string{"London", "Dublin"}, actual)
+}
 
 func TestCountryExt_SetContinents(t *testing.T) {
 	var cext countryExt
