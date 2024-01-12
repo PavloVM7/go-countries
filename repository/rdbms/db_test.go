@@ -53,7 +53,7 @@ func (s *databaseBaseTestSuite) TearDownSuite() {
 func (s *databaseBaseTestSuite) TearDownTest() {
 	fmt.Println("--- Truncate tables")
 	res, err := s.db.Exec(`TRUNCATE translations, country_continents, countries, languages, regions,
-    borders, country_capitals, top_level_domains
+    borders, country_capitals, country_capital_info, top_level_domains
     RESTART IDENTITY CASCADE;`)
 	if err != nil {
 		panic(err)
@@ -168,7 +168,7 @@ func createTestCountry() domain.Country {
 	result.SetBorders("BEL", "DEU")
 
 	result.SetCapital("Amsterdam")
-
+	result.SetCapitalInfo(domain.LatLng{Lat: 52.35, Lng: 4.92})
 	return result
 }
 

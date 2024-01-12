@@ -27,6 +27,11 @@ CREATE TABLE IF NOT EXISTS country_capitals
     capital    TEXT     NOT NULL,
     UNIQUE (country_id, capital)
 );
+CREATE TABLE IF NOT EXISTS country_capital_info
+(
+    capital_id INT PRIMARY KEY REFERENCES country_capitals (id),
+    location   POINT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS top_level_domains
 (
     id         SERIAL PRIMARY KEY,

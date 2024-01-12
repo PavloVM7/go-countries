@@ -59,7 +59,7 @@ func (db *Database) CreateNewCountry(country *domain.Country) (err error) {
 		wrapErr(er)
 		return
 	}
-	if er = db.createCountyCapitals(tx, countryRecord.CountryId, country.Capital()...); er != nil {
+	if er = db.createCountyCapitals(tx, countryRecord.CountryId, country.CapitalInfo(), country.Capital()...); er != nil {
 		wrapErr(er)
 		return
 	}
@@ -72,7 +72,6 @@ func (db *Database) CreateNewCountry(country *domain.Country) (err error) {
 	}
 	return
 }
-
 func (db *Database) createCountryBorders(prepStmt prepStatementI, countryId uint16, borders ...string) error {
 	bdb := bordersDb{prepStmt: prepStmt}
 	if _, err := bdb.createBorders(countryId, borders...); err != nil {
@@ -80,11 +79,22 @@ func (db *Database) createCountryBorders(prepStmt prepStatementI, countryId uint
 	}
 	return nil
 }
-func (db *Database) createCountyCapitals(prepStmt prepStatementI, countryId uint16, capitals ...string) error {
+func (db *Database) createCountyCapitals(prepStmt prepStatementI, countryId uint16, capitalsInfo []domain.LatLng, capitals ...string) error {
 	cdb := countryCapitalsDB{prepStmt: prepStmt}
-	if _, err := cdb.createCapitals(countryId, capitals...); err != nil {
+	caps, err := cdb.createCapitals(countryId, capitals...)
+	if err != nil {
 		return fmt.Errorf("country-capitals relations weren't created, %w", err)
 	}
+	ids := make([]uint32, 0, len(caps))
+	for _, c := range caps {
+		ids = append(ids, c.id)
+	}
+	capInfoDb := capitalInfoDb{prepStmt: prepStmt}
+	err = capInfoDb.createCapitalsInfo(ids, capitalsInfo)
+	if err != nil {
+		return fmt.Errorf("country-capitals-info relations weren't created, %w", err)
+	}
+
 	return nil
 }
 func (db *Database) createCountryContinents(prepStmt prepStatementI, countryId uint16, continents ...uint32) error {
@@ -160,10 +170,23 @@ func (db *Database) readCountryCapitals(country *domain.Country) error {
 		return err
 	}
 	capitals := make([]string, 0, len(capitalRecords))
+	ids := make([]uint32, 0, len(capitalRecords))
 	for _, c := range capitalRecords {
 		capitals = append(capitals, c.capital)
+		ids = append(ids, c.id)
 	}
 	country.SetCapital(capitals...)
+
+	capInfoDb := capitalInfoDb{prepStmt: db.db}
+	capInfoRecords, err := capInfoDb.readCapitalInfo(ids...)
+	if err != nil {
+		return err
+	}
+	capitalsInfo := make([]domain.LatLng, 0, len(capInfoRecords))
+	for _, c := range capInfoRecords {
+		capitalsInfo = append(capitalsInfo, c.point)
+	}
+	country.SetCapitalInfo(capitalsInfo...)
 	return nil
 }
 func (db *Database) readCountryBorders(country *domain.Country) error {
