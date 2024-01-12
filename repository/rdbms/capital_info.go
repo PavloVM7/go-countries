@@ -1,12 +1,10 @@
 package rdbms
 
 import (
-	"errors"
 	"github.com/PavloVM7/go-collections/pkg/collections/lists"
 	"github.com/lib/pq"
 	"math"
 	"pm.com/go-countries/domain"
-	"strconv"
 )
 
 type capitalInfoRecord struct {
@@ -15,38 +13,13 @@ type capitalInfoRecord struct {
 }
 
 func toCapitalInfoRecord(row scannable, record *capitalInfoRecord) error {
-	var data []byte
-	err := row.Scan(&record.capitalId, &data)
+	var point Point
+	err := row.Scan(&record.capitalId, &point)
 	if err != nil {
 		return err
 	}
-	lat, lng, err := parseToLatLng(data)
-	if err != nil {
-		return err
-	}
-	record.point = domain.LatLng{Lat: float32(lat), Lng: float32(lng)}
+	record.point = domain.LatLng{Lat: float32(point.Lat), Lng: float32(point.Lng)}
 	return nil
-}
-
-// ToDo: create struct Pointer{float64, float64} for this
-func parseToLatLng(src []byte) (lat float64, lng float64, err error) {
-	if len(src) == 0 {
-		err = errors.New("empty data")
-		return
-	}
-	data := src[1 : len(src)-1] // drops the surrounding parentheses
-	for i := 0; i < len(data); i++ {
-		if data[i] == ',' {
-			if lat, err = strconv.ParseFloat(string(data[:i]), 64); err != nil {
-				return
-			}
-			if lng, err = strconv.ParseFloat(string(data[i+1:]), 64); err != nil {
-				return
-			}
-			break
-		}
-	}
-	return
 }
 
 type capitalInfoDb struct {

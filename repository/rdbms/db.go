@@ -59,7 +59,8 @@ func (db *Database) CreateNewCountry(country *domain.Country) (err error) {
 		wrapErr(er)
 		return
 	}
-	if er = db.createCountyCapitals(tx, countryRecord.CountryId, country.CapitalInfo(), country.Capital()...); er != nil {
+	if er = db.createCountyCapitals(tx, countryRecord.CountryId, country.CapitalInfo(),
+		country.Capital()...); er != nil {
 		wrapErr(er)
 		return
 	}

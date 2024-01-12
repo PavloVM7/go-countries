@@ -11,3 +11,6 @@ dc-stop:
 	docker compose down
 clean:
 	rm -fr $(GOBIN)/*
+
+revive:
+	$(GOPATH)/bin/revive -config ./revive.toml -formatter friendly ./...

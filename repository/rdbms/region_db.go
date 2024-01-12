@@ -155,13 +155,13 @@ func (db *regionDb) readOrCreateContinents(continents ...string) ([]regionRecord
 	return result.ToArray(), nil
 }
 func (db *regionDb) getSubregion(name string) (regionRecord, error) {
-	return db.getRegion(selectSubregion, name)
+	return db.getRegionRecord(selectSubregion, name)
 }
 func (db *regionDb) GetRegion(name string) (regionRecord, error) {
-	return db.getRegion(selectRegion, name)
+	return db.getRegionRecord(selectRegion, name)
 }
 func (db *regionDb) getContinent(name string) (regionRecord, error) {
-	return db.getRegion(selectContinent, name)
+	return db.getRegionRecord(selectContinent, name)
 }
 func (db *regionDb) readRegionsByIds(ids ...uint32) ([]regionRecord, error) {
 	stmtSelect, err := db.prepStmt.Prepare(selectRegionByIds)
@@ -184,7 +184,7 @@ func (db *regionDb) readRegionsByIds(ids ...uint32) ([]regionRecord, error) {
 	}
 	return result.ToArray(), nil
 }
-func (db *regionDb) getRegion(sqlRequest, name string) (regionRecord, error) {
+func (db *regionDb) getRegionRecord(sqlRequest, name string) (regionRecord, error) {
 	result := regionRecord{regionId: 0, parentId: 0, regionName: name}
 	stmt, err := db.prepStmt.Prepare(sqlRequest)
 	if err != nil {
