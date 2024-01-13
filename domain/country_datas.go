@@ -50,6 +50,7 @@ func (cn *countryName) String() string {
 	return fmt.Sprintf("countryName{common: '%s'; official: '%s'", cn.common, cn.official)
 }
 
+// LatLng represents the latitude and longitude of a location
 type LatLng struct {
 	Lat float32
 	Lng float32

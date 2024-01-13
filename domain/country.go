@@ -16,54 +16,81 @@ type Country struct {
 	olympicCode string
 	fifa        string
 	flag        string
-	startOfWeek string
-	status      string
+	startOfWeek string // Day of the start of week (Sunday/Monday)
+	status      string // assigment status ( officially-assigned user-assigned)
 	name        countryName
 	latLng      LatLng
 	countryExt
 }
 
+// SetStartOfWeek is used to set the start of the week in the country
 func (c *Country) SetStartOfWeek(startOfWeek string) {
 	c.startOfWeek = startOfWeek
 }
+
+// StartOfWeek is used to get the start of the week in the country
 func (c *Country) StartOfWeek() string {
 	return c.startOfWeek
 }
+
+// SetStatus is used to set the status of the country
 func (c *Country) SetStatus(status string) {
 	c.status = status
 }
+
+// Status is used to get the status of the country
 func (c *Country) Status() string {
 	return c.status
 }
+
+// SetLatLng is used to set the latitude and longitude of the country
 func (c *Country) SetLatLng(lat, lng float32) {
 	c.latLng.Lat = lat
 	c.latLng.Lng = lng
 }
+
+// LatLng is used to get the latitude and longitude of the country
 func (c *Country) LatLng() (lat, lng float32) {
 	lat, lng = c.latLng.Lat, c.latLng.Lng
 	return
 }
+
+// Flag is used to get the flag emoji of the country
 func (c *Country) Flag() string {
 	return c.flag
 }
+
+// SetFlag is used to set the flag emoji of the country
 func (c *Country) SetFlag(flag string) {
 	c.flag = flag
 }
+
+// Region is used to get the UN demographic region of the country
 func (c *Country) Region() string {
 	return c.region
 }
+
+// Subregion is used to get the UN demographic subregion of the country
 func (c *Country) Subregion() string {
 	return c.subregion
 }
+
+// SetSubregion is used to set the UN demographic subregion of the country
 func (c *Country) SetSubregion(subregion string) {
 	c.subregion = strings.TrimSpace(subregion)
 }
+
+// SetRegion is used to set the UN demographic region of the country
 func (c *Country) SetRegion(region string) {
 	c.region = strings.TrimSpace(region)
 }
+
+// IsUnMember is used to check if the country is a UN member
 func (c *Country) IsUnMember() bool {
 	return c.unMember
 }
+
+// SetUnMember is used to set the country UN member status
 func (c *Country) SetUnMember(unMember bool) {
 	c.unMember = unMember
 }
