@@ -138,15 +138,14 @@ func (db *regionDb) readOrCreateContinents(continents ...string) ([]regionRecord
 		reg := regionRecord{parentId: 0, regionName: continent}
 		err = selContinent(&reg)
 		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				err = insertRegionRecord(stmtInsert, &reg)
-				if err != nil && isErrorUniqueViolation(err) {
-					err = selContinent(&reg)
-				}
-				if err != nil {
-					return nil, err
-				}
-			} else {
+			if !errors.Is(err, sql.ErrNoRows) {
+				return nil, err
+			}
+			err = insertRegionRecord(stmtInsert, &reg)
+			if err != nil && isErrorUniqueViolation(err) {
+				err = selContinent(&reg)
+			}
+			if err != nil {
 				return nil, err
 			}
 		}

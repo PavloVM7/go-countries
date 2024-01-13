@@ -1,4 +1,5 @@
-GOBIN = ./build/bin
+GOBIN=$(GOPATH)/bin
+BIN = ./build/bin
 redis:
 	docker compose up redis
 db-tests:
@@ -10,7 +11,7 @@ postgres:
 dc-stop:
 	docker compose down
 clean:
-	rm -fr $(GOBIN)/*
+	rm -fr $(BIN)/*
 
 revive:
-	$(GOPATH)/bin/revive -config ./revive.toml -formatter friendly ./...
+	$(GOBIN)/revive -config ./revive.toml -formatter friendly ./...
