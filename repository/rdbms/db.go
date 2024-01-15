@@ -76,10 +76,21 @@ func (db *Database) CreateNewCountry(country *domain.Country) (err error) {
 		wrapErr(er)
 		return
 	}
+	if er = db.createTimezones(tx, countryRecord.CountryId, country.Timezones()...); er != nil {
+		wrapErr(er)
+		return
+	}
 	if er = tx.Commit(); er != nil {
 		wrapErr(er)
 	}
 	return
+}
+func (db *Database) createTimezones(prepStmt prepStatementI, countryId uint16, timezones ...string) error {
+	tzdb := timezonesDB{prepStmt: prepStmt}
+	if _, err := tzdb.createTimezones(countryId, timezones...); err != nil {
+		return fmt.Errorf("timezones weren't created, %w", err)
+	}
+	return nil
 }
 func (db *Database) createAltSpellings(prepStmt prepStatementI, countryId uint16, altSpellings ...string) error {
 	asdb := altSpellingDB{prepStmt: prepStmt}
@@ -192,7 +203,24 @@ func (db *Database) ReadCountry(countryId uint16) (country domain.Country, regio
 		wrapErr(er)
 		return
 	}
+	if er = db.readCountryTimezones(&country); er != nil {
+		wrapErr(er)
+		return
+	}
 	return
+}
+func (db *Database) readCountryTimezones(country *domain.Country) error {
+	tdb := timezonesDB{prepStmt: db.db}
+	timezones, err := tdb.readTimezones(country.NumericCode())
+	if err != nil {
+		return err
+	}
+	tzs := make([]string, 0, len(timezones))
+	for _, record := range timezones {
+		tzs = append(tzs, record.tz)
+	}
+	country.SetTimezones(tzs...)
+	return nil
 }
 func (db *Database) readCountryAltSpellings(country *domain.Country) error {
 	cdb := altSpellingDB{prepStmt: db.db}
