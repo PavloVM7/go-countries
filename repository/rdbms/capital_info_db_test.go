@@ -18,7 +18,7 @@ func (s *countryCapitalInfoDbTestSuite) SetupSuite() {
 	s.databaseBaseTestSuite.SetupSuite()
 	s.dtb = capitalInfoDb{prepStmt: s.db}
 }
-func (s *countryCapitalInfoDbTestSuite) TearDownSuite() {
+func (s *countryCapitalInfoDbTestSuite) TearDownTest() {
 	s.databaseBaseTestSuite.TearDownTest()
 	s.countryRecord = CountryRecord{}
 }
