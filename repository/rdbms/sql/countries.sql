@@ -20,6 +20,13 @@ CREATE TABLE IF NOT EXISTS countries
     start_of_week TEXT NOT NULL,
     status        TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS country_alt_spellings
+(
+    id         SERIAL PRIMARY KEY,
+    country_id SMALLINT NOT NULL REFERENCES countries (country_id),
+    spelling   TEXT     NOT NULL,
+    UNIQUE (country_id, spelling)
+);
 CREATE TABLE IF NOT EXISTS country_capitals
 (
     id         SERIAL PRIMARY KEY,

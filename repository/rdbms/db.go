@@ -72,10 +72,21 @@ func (db *Database) CreateNewCountry(country *domain.Country) (err error) {
 		wrapErr(er)
 		return
 	}
+	if er = db.createAltSpellings(tx, countryRecord.CountryId, country.AltSpellings()...); er != nil {
+		wrapErr(er)
+		return
+	}
 	if er = tx.Commit(); er != nil {
 		wrapErr(er)
 	}
 	return
+}
+func (db *Database) createAltSpellings(prepStmt prepStatementI, countryId uint16, altSpellings ...string) error {
+	asdb := altSpellingDB{prepStmt: prepStmt}
+	if _, err := asdb.createAltSpellings(countryId, altSpellings...); err != nil {
+		return fmt.Errorf("alt-spellings weren't created, %w", err)
+	}
+	return nil
 }
 func (db *Database) createTopLevelDomains(prepStmt prepStatementI, countryId uint16, topLevelDomains ...string) error {
 	tldb := tldDb{prepStmt: prepStmt}
@@ -177,7 +188,24 @@ func (db *Database) ReadCountry(countryId uint16) (country domain.Country, regio
 		wrapErr(er)
 		return
 	}
+	if er = db.readCountryAltSpellings(&country); er != nil {
+		wrapErr(er)
+		return
+	}
 	return
+}
+func (db *Database) readCountryAltSpellings(country *domain.Country) error {
+	cdb := altSpellingDB{prepStmt: db.db}
+	altSpellings, err := cdb.readAltSpellings(country.NumericCode())
+	if err != nil {
+		return err
+	}
+	altS := make([]string, 0, len(altSpellings))
+	for _, record := range altSpellings {
+		altS = append(altS, record.altSpelling)
+	}
+	country.SetAltSpellings(altS...)
+	return nil
 }
 func (db *Database) readTopLevelDomains(country *domain.Country) error {
 	tdb := tldDb{prepStmt: db.db}

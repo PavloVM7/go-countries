@@ -53,16 +53,15 @@ func (db *tldDb) readTopLevelDomains(countryId uint16) ([]tldRecord, error) {
 	defer closeWithShowError(rows)
 	result := lists.NewLinkedList[tldRecord]()
 	for rows.Next() {
-		rec, er := db.toTopLevelDomain(rows)
-		if er != nil {
+		var rec tldRecord
+		if er := db.toTopLevelDomain(rows, &rec); er != nil {
 			return nil, fmt.Errorf("%w (country: %d)", er, countryId)
 		}
 		result.AddLast(rec)
 	}
 	return result.ToArray(), nil
 }
-func (db *tldDb) toTopLevelDomain(scn scannable) (tldRecord, error) {
-	var res tldRecord
-	err := scn.Scan(&res.id, &res.countryId, &res.tld)
-	return res, err
+func (db *tldDb) toTopLevelDomain(scn scannable, record *tldRecord) error {
+	err := scn.Scan(&record.id, &record.countryId, &record.tld)
+	return err
 }
