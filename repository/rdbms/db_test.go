@@ -169,6 +169,7 @@ func createTestCountry() domain.Country {
 
 	result.SetCapital("Amsterdam")
 	result.SetCapitalInfo(domain.LatLng{Lat: 52.35, Lng: 4.92})
+	result.SetTopLevelDomains(".nl", ".nld")
 	return result
 }
 

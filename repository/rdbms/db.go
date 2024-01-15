@@ -68,10 +68,21 @@ func (db *Database) CreateNewCountry(country *domain.Country) (err error) {
 		wrapErr(er)
 		return
 	}
+	if er = db.createTopLevelDomains(tx, countryRecord.CountryId, country.TopLevelDomains()...); er != nil {
+		wrapErr(er)
+		return
+	}
 	if er = tx.Commit(); er != nil {
 		wrapErr(er)
 	}
 	return
+}
+func (db *Database) createTopLevelDomains(prepStmt prepStatementI, countryId uint16, topLevelDomains ...string) error {
+	tldb := tldDb{prepStmt: prepStmt}
+	if _, err := tldb.createTopLevelDomains(countryId, topLevelDomains...); err != nil {
+		return fmt.Errorf("top-level-domains weren't created, %w", err)
+	}
+	return nil
 }
 func (db *Database) createCountryBorders(prepStmt prepStatementI, countryId uint16, borders ...string) error {
 	bdb := bordersDb{prepStmt: prepStmt}
@@ -162,7 +173,24 @@ func (db *Database) ReadCountry(countryId uint16) (country domain.Country, regio
 		wrapErr(er)
 		return
 	}
+	if er = db.readTopLevelDomains(&country); er != nil {
+		wrapErr(er)
+		return
+	}
 	return
+}
+func (db *Database) readTopLevelDomains(country *domain.Country) error {
+	tdb := tldDb{prepStmt: db.db}
+	topLevelDomains, err := tdb.readTopLevelDomains(country.NumericCode())
+	if err != nil {
+		return err
+	}
+	tlds := make([]string, 0, len(topLevelDomains))
+	for _, tld := range topLevelDomains {
+		tlds = append(tlds, tld.tld)
+	}
+	country.SetTopLevelDomains(tlds...)
+	return nil
 }
 func (db *Database) readCountryCapitals(country *domain.Country) error {
 	cdb := countryCapitalsDB{prepStmt: db.db}

@@ -7,25 +7,25 @@ import (
 	"strings"
 )
 
-type TldRecord struct {
-	Id        uint32
-	CountryId uint16
-	Tld       string
+type tldRecord struct {
+	id        uint32
+	countryId uint16
+	tld       string
 }
 
 type tldDb struct {
-	db *sql.DB
+	prepStmt prepStatementI
 }
 
-func (db *tldDb) CreateTopLevelDomains(countryId uint16, tlDomains ...string) ([]TldRecord, error) {
-	stmt, err := db.db.Prepare("INSERT INTO top_level_domains (country_id, tld)VALUES ($1,$2) RETURNING id")
+func (db *tldDb) createTopLevelDomains(countryId uint16, tlDomains ...string) ([]tldRecord, error) {
+	stmt, err := db.prepStmt.Prepare("INSERT INTO top_level_domains (country_id, tld)VALUES ($1,$2) RETURNING id")
 	if err != nil {
 		return nil, err
 	}
 	defer func(stmt *sql.Stmt) {
 		showError(stmt.Close())
 	}(stmt)
-	result := make([]TldRecord, 0, len(tlDomains))
+	result := make([]tldRecord, 0, len(tlDomains))
 	for _, tld := range tlDomains {
 		tld = strings.TrimSpace(tld)
 		if len(tld) == 0 {
@@ -33,13 +33,13 @@ func (db *tldDb) CreateTopLevelDomains(countryId uint16, tlDomains ...string) ([
 		}
 		var id uint32
 		if er := stmt.QueryRow(countryId, tld).Scan(&id); er == nil {
-			result = append(result, TldRecord{Id: id, CountryId: countryId, Tld: tld})
+			result = append(result, tldRecord{id: id, countryId: countryId, tld: tld})
 		}
 	}
 	return result, nil
 }
-func (db *tldDb) GetTopLevelDomains(countryId uint16) ([]TldRecord, error) {
-	stmt, err := db.db.Prepare("SELECT * FROM top_level_domains WHERE country_id=$1")
+func (db *tldDb) readTopLevelDomains(countryId uint16) ([]tldRecord, error) {
+	stmt, err := db.prepStmt.Prepare("SELECT * FROM top_level_domains WHERE country_id=$1")
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func (db *tldDb) GetTopLevelDomains(countryId uint16) ([]TldRecord, error) {
 		return nil, errQ
 	}
 	defer closeWithShowError(rows)
-	result := lists.NewLinkedList[TldRecord]()
+	result := lists.NewLinkedList[tldRecord]()
 	for rows.Next() {
 		rec, er := db.toTopLevelDomain(rows)
 		if er != nil {
@@ -61,8 +61,8 @@ func (db *tldDb) GetTopLevelDomains(countryId uint16) ([]TldRecord, error) {
 	}
 	return result.ToArray(), nil
 }
-func (db *tldDb) toTopLevelDomain(scn scannable) (TldRecord, error) {
-	var res TldRecord
-	err := scn.Scan(&res.Id, &res.CountryId, &res.Tld)
+func (db *tldDb) toTopLevelDomain(scn scannable) (tldRecord, error) {
+	var res tldRecord
+	err := scn.Scan(&res.id, &res.countryId, &res.tld)
 	return res, err
 }
