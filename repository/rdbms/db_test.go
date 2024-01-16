@@ -175,6 +175,9 @@ func createTestCountry() domain.Country {
 	result.SetTimezones("UTC+01:00")
 	result.AddCurrency("EUR", "Euro", "€")
 	result.AddLanguage("nld", "Dutch")
+	result.AddNativeName("nld", "Nederland", "Koninkrijk der Nederlanden")
+	result.AddTranslation("jpn", "オランダ", "オランダ")
+	result.AddTranslation("nld", "Nederland", "Nederland")
 	return result
 }
 

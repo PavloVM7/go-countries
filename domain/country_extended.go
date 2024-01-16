@@ -66,7 +66,13 @@ func (c *countryExt) AddDemonym(language, f, m string) {
 func (c *countryExt) Demonyms() []Demonym {
 	return tools.CopyArray(c.demonyms)
 }
-func (c *countryExt) AddTranslation(language, common, official string, native bool) {
+func (c *countryExt) AddTranslation(language, common, official string) {
+	c.addTranslationInner(language, common, official, false)
+}
+func (c *countryExt) AddNativeName(language, common, official string) {
+	c.addTranslationInner(language, common, official, true)
+}
+func (c *countryExt) addTranslationInner(language, common, official string, native bool) {
 	language = strings.TrimSpace(language)
 	common = strings.TrimSpace(common)
 	official = strings.TrimSpace(official)
@@ -74,7 +80,23 @@ func (c *countryExt) AddTranslation(language, common, official string, native bo
 		Translation{Language: language, Common: common, Official: official, Native: native})
 }
 func (c *countryExt) Translations() []Translation {
-	return tools.CopyArray(c.translations)
+	result := make([]Translation, 0, len(c.translations))
+	for _, translation := range c.translations {
+		if !translation.Native {
+			result = append(result, translation)
+		}
+	}
+	return result
+}
+func (c *countryExt) NativeNames() []Translation {
+	result := make([]Translation, 0, len(c.translations))
+	for _, translation := range c.translations {
+		if translation.Native {
+			result = append(result, translation)
+		}
+	}
+	slices.Clip(result)
+	return result
 }
 func (c *countryExt) AddLanguage(short, name string) {
 	short = strings.TrimSpace(short)

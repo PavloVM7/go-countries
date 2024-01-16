@@ -84,10 +84,36 @@ func (db *Database) CreateNewCountry(country *domain.Country) (err error) {
 		wrapErr(er)
 		return
 	}
+	translations := append([]domain.Translation(nil), country.NativeNames()...)
+	translations = append(translations, country.Translations()...)
+	if er = db.createTranslations(tx, countryRecord.CountryId, translations...); er != nil {
+		wrapErr(er)
+		return
+	}
 	if er = tx.Commit(); er != nil {
 		wrapErr(er)
 	}
 	return
+}
+func (db *Database) createTranslations(prepStmt prepStatementI, countryId uint16, translations ...domain.Translation) error {
+	ldb := languagesDb{prepStmt: prepStmt}
+	records := make([]*translationRecord, 0, len(translations))
+	for _, translation := range translations {
+		lang, err := ldb.readOrCrateLanguage(translation.Language, "")
+		if err != nil {
+			return fmt.Errorf("translation language %v wasn't created, %w", translation, err)
+		}
+		rec := translationToRecord(translation)
+		rec.languageId = lang.languageId
+		rec.countryId = countryId
+		records = append(records, &rec)
+	}
+	tdb := translationDb{prepStmt: prepStmt}
+	err := tdb.createTranslations(records...)
+	if err != nil {
+		return fmt.Errorf("translations weren't created, %w", err)
+	}
+	return nil
 }
 func (db *Database) createLanguages(prepStmt prepStatementI, countryId uint16, languages ...domain.Language) error {
 	ldb := languagesDb{prepStmt: prepStmt}
@@ -251,7 +277,43 @@ func (db *Database) ReadCountry(countryId uint16) (country domain.Country, regio
 		wrapErr(er)
 		return
 	}
+	if err = db.readTranslations(&country); err != nil {
+		wrapErr(err)
+		return
+	}
 	return
+}
+func (db *Database) readTranslations(country *domain.Country) error {
+	tdb := translationDb{prepStmt: db.db}
+	records, err := tdb.readTranslations(country.NumericCode())
+	if err != nil {
+		return err
+	}
+	ids := make([]uint16, 0, len(records))
+	for _, record := range records {
+		ids = append(ids, record.languageId)
+	}
+	ldb := languagesDb{prepStmt: db.db}
+	langs, err := ldb.readLanguages(ids...)
+	if err != nil {
+		return err
+	}
+	lmp := make(map[uint16]string, len(langs))
+	for _, l := range langs {
+		lmp[l.languageId] = l.language
+	}
+	for _, record := range records {
+		lng := lmp[record.languageId]
+		if lng == "" {
+			lng = "?"
+		}
+		if record.native {
+			country.AddNativeName(lng, record.commonName, record.officialName)
+		} else {
+			country.AddTranslation(lng, record.commonName, record.officialName)
+		}
+	}
+	return nil
 }
 func (db *Database) readCountryLanguages(country *domain.Country) error {
 	cdb := countryLanguagesDB{prepStmt: db.db}

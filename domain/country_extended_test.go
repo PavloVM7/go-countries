@@ -34,12 +34,12 @@ func TestCountryExt_AddDemonym(t *testing.T) {
 
 func TestCountryExt_AddTranslation(t *testing.T) {
 	var cext countryExt
-	cext.AddTranslation("nld ", " Nederland", "Koninkrijk der Nederlanden ", true)
-	cext.AddTranslation("deu", "Niederlande", "Niederlande", false)
+	cext.AddNativeName("nld ", " Nederland", "Koninkrijk der Nederlanden ")
+	cext.AddTranslation("deu", "Niederlande", "Niederlande")
 	actual := cext.Translations()
-	assert.Equal(t, []Translation{
-		{"nld", "Nederland", "Koninkrijk der Nederlanden", true},
-		{"deu", "Niederlande", "Niederlande", false}}, actual)
+	assert.Equal(t, []Translation{{"deu", "Niederlande", "Niederlande", false}}, actual)
+	native := cext.NativeNames()
+	assert.Equal(t, []Translation{{"nld", "Nederland", "Koninkrijk der Nederlanden", true}}, native)
 }
 
 func TestCountryExt_AddLanguage(t *testing.T) {
