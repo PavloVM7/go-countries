@@ -7,10 +7,6 @@ import (
 	"pm.com/go-countries/domain"
 )
 
-var (
-	ErrDuplicateKey = errors.New("duplicate key")
-)
-
 type scannable interface {
 	Scan(dest ...any) error
 }
@@ -84,10 +80,30 @@ func (db *Database) CreateNewCountry(country *domain.Country) (err error) {
 		wrapErr(er)
 		return
 	}
+	if er = db.createLanguages(tx, countryRecord.CountryId, country.Languages()...); er != nil {
+		wrapErr(er)
+		return
+	}
 	if er = tx.Commit(); er != nil {
 		wrapErr(er)
 	}
 	return
+}
+func (db *Database) createLanguages(prepStmt prepStatementI, countryId uint16, languages ...domain.Language) error {
+	ldb := languagesDb{prepStmt: prepStmt}
+	ids := make([]uint16, 0, len(languages))
+	for _, language := range languages {
+		if rec, err := ldb.readOrCrateLanguage(language.Short, language.Name); err != nil {
+			return fmt.Errorf("language %v wasn't created, %w", language, err)
+		} else {
+			ids = append(ids, rec.languageId)
+		}
+	}
+	cldb := countryLanguagesDB{prepStmt: prepStmt}
+	if _, err := cldb.createCountryLanguages(countryId, ids...); err != nil {
+		return fmt.Errorf("country-languages relations weren't created, %w", err)
+	}
+	return nil
 }
 func (db *Database) createCurrencies(prepStmt prepStatementI, countryId uint16, currencies ...domain.Currency) error {
 	cdb := currenciesDB{prepStmt: prepStmt}
@@ -231,7 +247,32 @@ func (db *Database) ReadCountry(countryId uint16) (country domain.Country, regio
 		wrapErr(er)
 		return
 	}
+	if er = db.readCountryLanguages(&country); er != nil {
+		wrapErr(er)
+		return
+	}
 	return
+}
+func (db *Database) readCountryLanguages(country *domain.Country) error {
+	cdb := countryLanguagesDB{prepStmt: db.db}
+	languages, err := cdb.readCountryLanguages(country.NumericCode())
+	if err != nil {
+		return err
+	}
+	ids := make([]uint16, 0, len(languages))
+	for _, record := range languages {
+		ids = append(ids, record.languageId)
+	}
+
+	ldb := languagesDb{prepStmt: db.db}
+	records, er := ldb.readLanguages(ids...)
+	if er != nil {
+		return er
+	}
+	for _, l := range records {
+		country.AddLanguage(l.language, l.languageName)
+	}
+	return nil
 }
 func (db *Database) readCountryCurrencies(country *domain.Country) error {
 	ccdb := countryCurrenciesDB{prepStmt: db.db}

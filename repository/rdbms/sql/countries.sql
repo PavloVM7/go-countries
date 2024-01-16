@@ -20,6 +20,13 @@ CREATE TABLE IF NOT EXISTS countries
     start_of_week TEXT NOT NULL,
     status        TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS country_languages
+(
+    id          SERIAL PRIMARY KEY,
+    country_id  SMALLINT NOT NULL REFERENCES countries (country_id),
+    language_id SMALLINT NOT NULL REFERENCES languages (language_id),
+    UNIQUE (country_id, language_id)
+);
 CREATE TABLE IF NOT EXISTS country_currencies
 (
     id          SERIAL PRIMARY KEY,
@@ -72,13 +79,6 @@ CREATE TABLE IF NOT EXISTS country_continents
     country_id   SMALLINT REFERENCES countries (country_id),
     continent_id INT REFERENCES regions (region_id),
     PRIMARY KEY (country_id, continent_id)
-);
-
-CREATE TABLE IF NOT EXISTS country_languages
-(
-    country_id  SMALLINT REFERENCES countries (country_id),
-    language_id SMALLINT REFERENCES languages (language_id),
-    PRIMARY KEY (country_id, language_id)
 );
 
 CREATE TABLE IF NOT EXISTS translations
