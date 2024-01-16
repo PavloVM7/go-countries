@@ -1,6 +1,7 @@
 package rdbms
 
 import (
+	"database/sql"
 	"github.com/stretchr/testify/suite"
 	"testing"
 )
@@ -30,6 +31,12 @@ func (s *currenciesDbTestSuite) TestGetCurrency() {
 	currency, err := s.dtb.getCurrency("USD")
 	s.NoError(err)
 	s.Equal(expected, currency)
+}
+func (s *currenciesDbTestSuite) TestGetCurrency_not_found() {
+	currency, err := s.dtb.getCurrency("USD")
+	s.Error(err)
+	s.ErrorIs(err, sql.ErrNoRows)
+	s.Equal(currencyRecord{short: "USD"}, currency)
 }
 func (s *currenciesDbTestSuite) TestReadOrCreateCurrency() {
 	expected := currencyRecord{currencyId: 1, short: "EUR", name: "Euro", symbol: "€"}

@@ -13,7 +13,8 @@ type currencyRecord struct {
 }
 
 func toCurrencyRecord(scn scannable, result *currencyRecord) error {
-	return scn.Scan(&result.currencyId, &result.short, &result.name, &result.symbol)
+	err := scn.Scan(&result.currencyId, &result.short, &result.name, &result.symbol)
+	return err
 }
 
 type currenciesDB struct {
@@ -49,5 +50,5 @@ func (db *currenciesDB) getCurrency(short string) (currencyRecord, error) {
 	}
 	defer closeWithShowError(stmt)
 	err = toCurrencyRecord(stmt.QueryRow(short), &result)
-	return result, nil
+	return result, err
 }

@@ -172,6 +172,7 @@ func createTestCountry() domain.Country {
 	result.SetTopLevelDomains(".nl", ".nld")
 	result.SetAltSpellings("NL", "Holland", "Nederland", "The Netherlands")
 	result.SetTimezones("UTC+01:00")
+	result.AddCurrency("EUR", "Euro", "€")
 	return result
 }
 

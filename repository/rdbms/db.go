@@ -80,12 +80,24 @@ func (db *Database) CreateNewCountry(country *domain.Country) (err error) {
 		wrapErr(er)
 		return
 	}
+	if er = db.createCurrencies(tx, countryRecord.CountryId, country.Currencies()...); er != nil {
+		wrapErr(er)
+		return
+	}
 	if er = tx.Commit(); er != nil {
 		wrapErr(er)
 	}
 	return
 }
-
+func (db *Database) createCurrencies(prepStmt prepStatementI, countryId uint16, currencies ...domain.Currency) error {
+	cdb := currenciesDB{prepStmt: prepStmt}
+	for _, currency := range currencies {
+		if _, err := cdb.readOrCreateCurrency(currency.Short, currency.Name, currency.Symbol); err != nil {
+			return fmt.Errorf("currency %v wasn't created, %w", currency, err)
+		}
+	}
+	return nil
+}
 func (db *Database) createTimezones(prepStmt prepStatementI, countryId uint16, timezones ...string) error {
 	tzdb := timezonesDB{prepStmt: prepStmt}
 	if _, err := tzdb.createTimezones(countryId, timezones...); err != nil {
