@@ -53,7 +53,8 @@ func (s *databaseBaseTestSuite) TearDownSuite() {
 func (s *databaseBaseTestSuite) TearDownTest() {
 	fmt.Println("--- Truncate tables")
 	res, err := s.db.Exec(`TRUNCATE translations, country_continents, countries, languages, regions,
-    borders, country_capitals, country_capital_info, top_level_domains, country_alt_spellings, currencies
+    borders, country_capitals, country_capital_info, top_level_domains, country_alt_spellings, currencies, 
+    country_currencies
     RESTART IDENTITY CASCADE;`)
 	if err != nil {
 		panic(err)

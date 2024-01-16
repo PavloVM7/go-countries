@@ -20,6 +20,13 @@ CREATE TABLE IF NOT EXISTS countries
     start_of_week TEXT NOT NULL,
     status        TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS country_currencies
+(
+    id          SERIAL PRIMARY KEY,
+    country_id  SMALLINT NOT NULL REFERENCES countries (country_id),
+    currency_id INTEGER  NOT NULL REFERENCES currencies (currency_id),
+    UNIQUE (country_id, currency_id)
+);
 CREATE TABLE IF NOT EXISTS country_timezone
 (
     id         SERIAL PRIMARY KEY,

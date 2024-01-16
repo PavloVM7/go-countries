@@ -3,6 +3,8 @@ package rdbms
 import (
 	"database/sql"
 	"errors"
+	"github.com/PavloVM7/go-collections/pkg/collections/lists"
+	"github.com/lib/pq"
 )
 
 type currencyRecord struct {
@@ -21,6 +23,27 @@ type currenciesDB struct {
 	prepStmt prepStatementI
 }
 
+func (db *currenciesDB) readCurrencies(currenciesId ...uint32) ([]currencyRecord, error) {
+	stmt, err := db.prepStmt.Prepare("SELECT * FROM currencies WHERE currency_id = ANY($1)")
+	if err != nil {
+		return nil, err
+	}
+	defer closeWithShowError(stmt)
+	rows, er := stmt.Query(pq.Array(currenciesId))
+	if er != nil {
+		return nil, er
+	}
+	defer closeWithShowError(rows)
+	result := lists.NewLinkedList[currencyRecord]()
+	for rows.Next() {
+		reg := currencyRecord{}
+		if err = toCurrencyRecord(rows, &reg); err != nil {
+			return nil, err
+		}
+		result.AddLast(reg)
+	}
+	return result.ToArray(), nil
+}
 func (db *currenciesDB) readOrCreateCurrency(short, name, symbol string) (currencyRecord, error) {
 	result, err := db.getCurrency(short)
 	if err == nil {

@@ -91,10 +91,17 @@ func (db *Database) CreateNewCountry(country *domain.Country) (err error) {
 }
 func (db *Database) createCurrencies(prepStmt prepStatementI, countryId uint16, currencies ...domain.Currency) error {
 	cdb := currenciesDB{prepStmt: prepStmt}
+	ids := make([]uint32, 0, len(currencies))
 	for _, currency := range currencies {
-		if _, err := cdb.readOrCreateCurrency(currency.Short, currency.Name, currency.Symbol); err != nil {
+		if rec, err := cdb.readOrCreateCurrency(currency.Short, currency.Name, currency.Symbol); err != nil {
 			return fmt.Errorf("currency %v wasn't created, %w", currency, err)
+		} else {
+			ids = append(ids, rec.currencyId)
 		}
+	}
+	ccdb := countryCurrenciesDB{prepStmt: prepStmt}
+	if _, err := ccdb.createCountryCurrencies(countryId, ids...); err != nil {
+		return fmt.Errorf("country-currencies relations weren't created, %w", err)
 	}
 	return nil
 }
@@ -220,7 +227,31 @@ func (db *Database) ReadCountry(countryId uint16) (country domain.Country, regio
 		wrapErr(er)
 		return
 	}
+	if er = db.readCountryCurrencies(&country); er != nil {
+		wrapErr(er)
+		return
+	}
 	return
+}
+func (db *Database) readCountryCurrencies(country *domain.Country) error {
+	ccdb := countryCurrenciesDB{prepStmt: db.db}
+	countryCurrencies, err := ccdb.readCountryCurrencies(country.NumericCode())
+	if err != nil {
+		return err
+	}
+	ids := make([]uint32, 0, len(countryCurrencies))
+	for _, record := range countryCurrencies {
+		ids = append(ids, record.currencyId)
+	}
+	cdb := currenciesDB{prepStmt: db.db}
+	currencies, er := cdb.readCurrencies(ids...)
+	if er != nil {
+		return er
+	}
+	for _, c := range currencies {
+		country.AddCurrency(c.short, c.name, c.symbol)
+	}
+	return nil
 }
 func (db *Database) readCountryTimezones(country *domain.Country) error {
 	tdb := timezonesDB{prepStmt: db.db}
