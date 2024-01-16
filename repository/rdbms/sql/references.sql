@@ -12,3 +12,10 @@ CREATE TABLE IF NOT EXISTS languages
     language      CHAR(3) UNIQUE     NOT NULL,
     language_name VARCHAR(32) UNIQUE NOT NULL
 );
+CREATE TABLE IF NOT EXISTS currencies
+(
+    currency_id   SMALLSERIAL PRIMARY KEY,
+    currency      VARCHAR(3) UNIQUE  NOT NULL,
+    currency_name VARCHAR(39) UNIQUE NOT NULL,
+    symbol        VARCHAR(10) UNIQUE NOT NULL
+);

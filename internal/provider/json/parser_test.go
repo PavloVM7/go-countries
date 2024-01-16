@@ -21,6 +21,8 @@ func Test_parseJsonData(t *testing.T) {
 	maxNameLength := 0
 	maxLanguageNameLen := 0
 	maxLenLanguage := ""
+	maxCurrencySymbolLen := 1
+	maxCurrencyNameLen := 5
 	var name NameJson
 	var borders []string
 	var capital []string
@@ -50,11 +52,27 @@ func Test_parseJsonData(t *testing.T) {
 		if len(c.Continents) != 1 {
 			t.Log(len(c.Continents), ", continents:", c.Continents, ", region:", c.Region, ", subregion:", c.Subregion, ", name:", c.Name.Common)
 		}
+		for _, cur := range c.Currencies {
+			show := false
+			if len(cur.Symbol) > maxCurrencySymbolLen {
+				maxCurrencySymbolLen = len(cur.Symbol)
+				show = true
+			}
+			if len(cur.Name) > maxCurrencyNameLen {
+				maxCurrencyNameLen = len(cur.Name)
+				show = true
+			}
+			if show {
+				t.Log("currency:", cur, "symbol:", cur.Symbol, "/", len(cur.Symbol),
+					", name:", cur.Name, "/", len(cur.Name))
+			}
+		}
 	}
 	t.Log("maxNameLength =", maxNameLength, name)
 	t.Log("maxBorders =", borders, ",", len(borders))
 	t.Log("maxCapitals:", capital, "LatLng:", capitalLatLng)
 	t.Log("maxLanguageNameLen:", maxLanguageNameLen, maxLenLanguage)
+	t.Log("maxCurrencySymbolLen:", maxCurrencySymbolLen, "maxCurrencyNameLen:", maxCurrencyNameLen)
 }
 
 func createTestReader() io.Reader {

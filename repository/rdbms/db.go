@@ -85,6 +85,7 @@ func (db *Database) CreateNewCountry(country *domain.Country) (err error) {
 	}
 	return
 }
+
 func (db *Database) createTimezones(prepStmt prepStatementI, countryId uint16, timezones ...string) error {
 	tzdb := timezonesDB{prepStmt: prepStmt}
 	if _, err := tzdb.createTimezones(countryId, timezones...); err != nil {
