@@ -92,3 +92,13 @@ CREATE TABLE IF NOT EXISTS translations
     UNIQUE (country_id, language_id, native)
 );
 CREATE UNIQUE INDEX IF NOT EXISTS translations_country ON translations (country_id, language_id, native);
+
+CREATE TABLE IF NOT EXISTS country_demonyms
+(
+    id          SERIAL PRIMARY KEY,
+    country_id  SMALLINT NOT NULL REFERENCES countries (country_id),
+    language_id SMALLINT NOT NULL REFERENCES languages (language_id),
+    female      TEXT     NOT NULL,
+    male        TEXT     NOT NULL,
+    UNIQUE (country_id, language_id)
+);
