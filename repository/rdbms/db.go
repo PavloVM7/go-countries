@@ -90,10 +90,34 @@ func (db *Database) CreateNewCountry(country *domain.Country) (err error) {
 		wrapErr(er)
 		return
 	}
+	if er = db.createDemonyms(tx, countryRecord.CountryId, country.Demonyms()...); er != nil {
+		wrapErr(er)
+		return
+	}
 	if er = tx.Commit(); er != nil {
 		wrapErr(er)
 	}
 	return
+}
+func (db *Database) createDemonyms(prepStmt prepStatementI, countryId uint16, demonyms ...domain.Demonym) error {
+	ldb := languagesDb{prepStmt: prepStmt}
+	records := make([]*demonymRecord, 0, len(demonyms))
+	for _, demonym := range demonyms {
+		lang, err := ldb.readOrCrateLanguage(demonym.Language, "")
+		if err != nil {
+			return fmt.Errorf("demonym language %v wasn't created, %w", demonym, err)
+		}
+		rec := demonymToRecord(demonym)
+		rec.languageId = lang.languageId
+		rec.countryId = countryId
+		records = append(records, &rec)
+	}
+	ddb := demonymsDB{prepStmt: prepStmt}
+	err := ddb.createDemonyms(records)
+	if err != nil {
+		return fmt.Errorf("demonyms weren't created, %w", err)
+	}
+	return nil
 }
 func (db *Database) createTranslations(prepStmt prepStatementI, countryId uint16, translations ...domain.Translation) error {
 	ldb := languagesDb{prepStmt: prepStmt}

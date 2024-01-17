@@ -125,7 +125,7 @@ func (s *DatabaseTestSuite) TearDownSuite() {
 	}
 }
 
-func (s *DatabaseTestSuite) TestCrateCountry() {
+func (s *DatabaseTestSuite) TestCreateCountry() {
 	country := createTestCountry()
 	err := s.database.CreateNewCountry(&country)
 	s.Nil(err)
@@ -178,6 +178,8 @@ func createTestCountry() domain.Country {
 	result.AddNativeName("nld", "Nederland", "Koninkrijk der Nederlanden")
 	result.AddTranslation("jpn", "オランダ", "オランダ")
 	result.AddTranslation("nld", "Nederland", "Nederland")
+	result.AddDemonym("eng", "Dutch", "Dutch")
+	result.AddDemonym("fra", "Néerlandaise", "Néerlandais")
 	return result
 }
 
