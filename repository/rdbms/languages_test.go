@@ -2,6 +2,7 @@ package rdbms
 
 import (
 	"fmt"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -34,18 +35,13 @@ func Test_languagesCache_addLanguage(t *testing.T) {
 	for i, tt := range tests {
 		tt.name = fmt.Sprintf("%d_%s", i, tt.name)
 		t.Run(tt.name, func(t *testing.T) {
-			lc := &languagesCache{languages: make(map[string]*languageRecord)}
+			lc := newLanguagesCache()
 			lc.addLanguage(tt.langShortAndName1[0], tt.langShortAndName1[1])
-
-			for _, lang := range tt.langShortAndName1 {
-				l.addLanguage(lang, "")
+			if len(tt.langShortAndName2) > 0 {
+				lc.addLanguage(tt.langShortAndName2[0], tt.langShortAndName2[1])
 			}
-			for _, lang := range tt.langShortAndName2 {
-				l.addLanguage(lang, "")
-			}
-			if l.languages["eng"] != tt.expected {
-				t.Errorf("languagesCache.addLanguage() = %v, want %v", l.languages["eng"], tt.expected)
-			}
+			assert.Equal(t, tt.expected, lc.languages["eng"])
+			assert.Equal(t, []*languageRecord{tt.expected}, lc.getLanguages())
 		})
 	}
 }

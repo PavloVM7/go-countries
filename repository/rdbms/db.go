@@ -18,6 +18,9 @@ type Database struct {
 }
 
 func (db *Database) CreateNewCountry(country *domain.Country) (err error) {
+	languagesCache := newLanguagesCache()
+	gatherCountryLanguages(languagesCache, country)
+
 	tx, er := db.db.Begin()
 	wrapErr := func(er error) {
 		err = wrapCountryError(err, er, country.NumericCode(), country.Alpha3Code(), country.CommonName())
@@ -511,5 +514,16 @@ func wrapCountryError(baseErr, newErr error, countryId uint16, countryCode, coun
 		return fmt.Errorf("%w (country: %d:%s:'%s')", newErr, countryId, countryCode, countryName)
 	} else {
 		return fmt.Errorf("%w; %w (country: %d:%s:'%s')", baseErr, newErr, countryId, countryCode, countryName)
+	}
+}
+func gatherCountryLanguages(cache *languagesCache, country *domain.Country) {
+	for _, lang := range country.Languages() {
+		cache.addLanguage(lang.Short, lang.Name)
+	}
+	for _, tr := range country.Translations() {
+		cache.addLanguage(tr.Language, "")
+	}
+	for _, d := range country.Demonyms() {
+		cache.addLanguage(d.Language, "")
 	}
 }

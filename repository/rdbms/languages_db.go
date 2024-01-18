@@ -45,24 +45,37 @@ func (db *languagesDb) readLanguages(ids ...uint16) ([]languageRecord, error) {
 }
 func (db *languagesDb) readOrCrateLanguage(language, languageName string) (languageRecord, error) {
 	record := languageRecord{languageId: 0, language: language, languageName: languageName}
+	err := db.readOrCreateLanguageRecord(&record)
+	return record, err
+}
+func (db *languagesDb) readOrCreateLanguageRecords(records []*languageRecord) error {
+	for _, record := range records {
+		err := db.readOrCreateLanguageRecord(record)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func (db *languagesDb) readOrCreateLanguageRecord(record *languageRecord) error {
 	stmtSelect, err := db.prepareSelectLanguage()
 	if err != nil {
-		return record, wrapLanguageError(err, record)
+		return wrapLanguageError(err, *record)
 	}
 	defer closeWithShowError(stmtSelect)
-	err = db.readAndUpdateLanguageRecord(stmtSelect, &record)
+	err = db.readAndUpdateLanguageRecord(stmtSelect, record)
 	if err != nil && errors.Is(err, sql.ErrNoRows) {
 		stmtInsert, er := db.prepareInsertLanguage()
 		if er != nil {
-			return record, wrapLanguageError(er, record)
+			return wrapLanguageError(er, *record)
 		}
 		defer closeWithShowError(stmtInsert)
-		err = insertRecord(stmtInsert, &record)
+		err = insertRecord(stmtInsert, record)
 		if err != nil && isErrorUniqueViolation(err) {
-			err = db.readAndUpdateLanguageRecord(stmtSelect, &record)
+			err = db.readAndUpdateLanguageRecord(stmtSelect, record)
 		}
 	}
-	return record, err
+	return err
 }
 func (db *languagesDb) readAndUpdateLanguageRecord(stmSelect *sql.Stmt, record *languageRecord) error {
 	oldName := record.languageName
