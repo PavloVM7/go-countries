@@ -107,3 +107,35 @@ type CarJson struct {
 	Signs []string
 	Side  string
 }
+
+func createCountryFromJson(jsonCountry *CountryJSON) domain.Country {
+	result := domain.NewCountry(jsonCountry.NumericCode, jsonCountry.Alpha2Code, jsonCountry.Alpha3Code)
+	result.SetName(jsonCountry.Name.Common, jsonCountry.Name.Official)
+	for k, v := range jsonCountry.Name.NativeName {
+		result.AddNativeName(k, v.Common, v.Official)
+	}
+	result.SetTopLevelDomains(jsonCountry.Tld...)
+	result.SetOlympicCode(jsonCountry.Cioc)
+	result.SetIndependent(jsonCountry.Independent)
+	result.SetStatus(jsonCountry.Status)
+	result.SetUnMember(jsonCountry.UnMember)
+	for k, currency := range jsonCountry.Currencies {
+		result.AddCurrency(k, currency.Name, currency.Symbol)
+	}
+	result.SetCapital(jsonCountry.Capital...)
+	result.SetAltSpellings(jsonCountry.AltSpellings...)
+	result.SetRegion(jsonCountry.Region)
+	result.SetSubregion(jsonCountry.Subregion)
+	for k, v := range jsonCountry.Languages {
+		result.AddLanguage(k, v)
+	}
+	for k, v := range jsonCountry.Translations {
+		result.AddTranslation(k, v.Common, v.Official)
+	}
+	//result.SetBorders(jsonCountry.Borders...)
+	//result.SetCallingCodes(jsonCountry.CallingCodes.Root, jsonCountry.CallingCodes.Suffixes...)
+	//result.SetCapitalInfo(jsonCountry.CapitalInfo.LatLng.Lat, jsonCountry.CapitalInfo.LatLng.Lng)
+	//jsonCountry.Currencies.UnmarshalCurrencies(result)
+	result.SetContinents(jsonCountry.Continents...)
+	return result
+}

@@ -4,8 +4,81 @@ import (
 	"encoding/json"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"os"
+	"pm.com/go-countries/domain"
+	"sort"
 	"testing"
 )
+
+func Test_createCountryFromJson(t *testing.T) {
+	name := "../../../tests/testdata/france.json"
+	bytes := testFileToBytes(name)
+	assert.NotEqual(t, 0, len(bytes))
+	var country CountryJSON
+	err := json.Unmarshal(bytes, &country)
+	if err != nil {
+		t.Fatal(err)
+	}
+	actual := createCountryFromJson(&country)
+	expected := domain.NewCountry(250, "FR", "FRA")
+	expected.SetName("France", "French Republic")
+	expected.AddNativeName("fra", "France", "République française")
+	expected.SetTopLevelDomains(".fr")
+	expected.SetOlympicCode("FRA")
+	expected.SetIndependent(true)
+	expected.SetStatus("officially-assigned")
+	expected.SetUnMember(true)
+	expected.AddCurrency("EUR", "Euro", "€")
+	expected.SetCapital("Paris")
+	expected.SetAltSpellings("FR", "French Republic", "République française")
+	expected.SetRegion("Europe")
+	expected.SetSubregion("Western Europe")
+	expected.SetContinents("Europe")
+
+	expected.AddLanguage("fra", "French")
+	expected.AddTranslation("ces", "Francie", "Francouzská republika")
+	expected.AddTranslation("ara", "فرنسا", "الجمهورية الفرنسية")
+	expected.AddTranslation("bre", "Frañs", "Republik Frañs")
+	expected.AddTranslation("cym", "France", "French Republic")
+	expected.AddTranslation("deu", "Frankreich", "Französische Republik")
+	expected.AddTranslation("est", "Prantsusmaa", "Prantsuse Vabariik")
+	expected.AddTranslation("fin", "Ranska", "Ranskan tasavalta")
+	expected.AddTranslation("fra", "France", "République française")
+	expected.AddTranslation("hrv", "Francuska", "Francuska Republika")
+	expected.AddTranslation("hun", "Franciaország", "Francia Köztársaság")
+	expected.AddTranslation("ita", "Francia", "Repubblica francese")
+	expected.AddTranslation("jpn", "フランス", "フランス共和国")
+	expected.AddTranslation("kor", "프랑스", "프랑스 공화국")
+	expected.AddTranslation("nld", "Frankrijk", "Franse Republiek")
+	expected.AddTranslation("per", "فرانسه", "جمهوری فرانسه")
+	expected.AddTranslation("pol", "Francja", "Republika Francuska")
+	expected.AddTranslation("por", "França", "República Francesa")
+	expected.AddTranslation("rus", "Франция", "Французская Республика")
+	expected.AddTranslation("slk", "Francúzsko", "Francúzska republika")
+	expected.AddTranslation("spa", "Francia", "República francés")
+	expected.AddTranslation("srp", "Француска", "Француска Република")
+	expected.AddTranslation("swe", "Frankrike", "Republiken Frankrike")
+	expected.AddTranslation("tur", "Fransa", "Fransa Cumhuriyeti")
+	expected.AddTranslation("urd", "فرانس", "جمہوریہ فرانس")
+	expected.AddTranslation("zho", "法国", "法兰西共和国")
+
+	assert.Equal(t, len(expected.Translations()), len(actual.Translations()))
+	expTr := expected.Translations()
+	actTr := actual.Translations()
+	sort.Slice(expTr, func(i, j int) bool {
+		return expTr[i].Language < expTr[j].Language
+	})
+	sort.Slice(actTr, func(i, j int) bool {
+		return actTr[i].Language < actTr[j].Language
+	})
+	for i := 0; i < len(expTr); i++ {
+		t.Log(i, expTr[i])
+		t.Log(i, actTr[i])
+		assert.Equal(t, expTr[i], actTr[i])
+	}
+
+	assert.Equal(t, expected, actual)
+}
 
 func TestCountryJSON_unmarshal(t *testing.T) {
 	var country CountryJSON
@@ -257,4 +330,12 @@ func TestCurrenciesJson_UnmarshalJSON(t *testing.T) {
 			"DJF": {Name: "Djiboutian franc", Symbol: "Fr"},
 		},
 	}, res)
+}
+
+func testFileToBytes(fileName string) []byte {
+	bytes, err := os.ReadFile(fileName)
+	if err != nil {
+		panic(err)
+	}
+	return bytes
 }

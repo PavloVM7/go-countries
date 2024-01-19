@@ -4,6 +4,7 @@ import (
 	"github.com/PavloVM7/go-collections/pkg/collections"
 	"pm.com/go-countries/tools"
 	"slices"
+	"sort"
 	"strings"
 )
 
@@ -23,6 +24,7 @@ type countryExt struct {
 	flags           []CodeDescription
 	maps            []CodeDescription
 	coatOfArms      []CodeDescription
+	// ToDo: International dialing codes (callingCodes / idd)
 }
 
 func (c *countryExt) AddCoatOfArm(picType, ref string) {
@@ -76,8 +78,18 @@ func (c *countryExt) addTranslationInner(language, common, official string, nati
 	language = strings.TrimSpace(language)
 	common = strings.TrimSpace(common)
 	official = strings.TrimSpace(official)
+	if language == "" || common == "" || official == "" {
+		return
+	}
 	c.translations = append(c.translations,
 		Translation{Language: language, Common: common, Official: official, Native: native})
+	sort.Slice(c.translations, func(i, j int) bool {
+		if c.translations[i].Language == c.translations[j].Language {
+			return c.translations[i].Native
+		}
+		return c.translations[i].Language < c.translations[j].Language
+	})
+
 }
 func (c *countryExt) Translations() []Translation {
 	result := make([]Translation, 0, len(c.translations))
