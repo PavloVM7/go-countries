@@ -77,6 +77,12 @@ func (ll *LatLngJson) UnmarshalJSON(data []byte) error {
 	ll.Lng = ar[1]
 	return nil
 }
+func (ll *LatLngJson) asLatLng() domain.LatLng {
+	return domain.LatLng{
+		Lat: ll.Lat,
+		Lng: ll.Lng,
+	}
+}
 
 type CurrenciesJson map[string]CurrencyJson
 
@@ -132,9 +138,30 @@ func createCountryFromJson(jsonCountry *CountryJSON) domain.Country {
 	for k, v := range jsonCountry.Translations {
 		result.AddTranslation(k, v.Common, v.Official)
 	}
-	//result.SetBorders(jsonCountry.Borders...)
-	//result.SetCallingCodes(jsonCountry.CallingCodes.Root, jsonCountry.CallingCodes.Suffixes...)
-	//result.SetCapitalInfo(jsonCountry.CapitalInfo.LatLng.Lat, jsonCountry.CapitalInfo.LatLng.Lng)
+	result.SetLatLng(jsonCountry.LatLng.Lat, jsonCountry.LatLng.Lng)
+	result.SetLandlocked(jsonCountry.Landlocked)
+	result.SetBorders(jsonCountry.Borders...)
+	result.SetArea(jsonCountry.Area)
+
+	for k, v := range jsonCountry.Demonyms {
+		result.AddDemonym(k, v.F, v.M)
+	}
+	result.SetFlag(jsonCountry.Flag)
+	for k, v := range jsonCountry.Maps {
+		result.AddMap(k, v)
+	}
+	result.SetPopulation(jsonCountry.Population)
+	result.SetFifa(jsonCountry.Fifa)
+	result.SetCar(jsonCountry.Car.Side, jsonCountry.Car.Signs...)
+	result.SetTimezones(jsonCountry.Timezones...)
+	for k, v := range jsonCountry.Flags {
+		result.AddFlag(k, v)
+	}
+	for k, v := range jsonCountry.CoatOfArms {
+		result.AddCoatOfArm(k, v)
+	}
+	result.SetStartOfWeek(jsonCountry.StartOfWeek)
+	result.SetCapitalInfo(jsonCountry.CapitalInfo.LatLng.asLatLng())
 	//jsonCountry.Currencies.UnmarshalCurrencies(result)
 	result.SetContinents(jsonCountry.Continents...)
 	return result

@@ -67,6 +67,7 @@ func Test_parseJsonData(t *testing.T) {
 					", name:", cur.Name, "/", len(cur.Name))
 			}
 		}
+		t.Log("calling codes:", c.CallingCodes)
 	}
 	t.Log("maxNameLength =", maxNameLength, name)
 	t.Log("maxBorders =", borders, ",", len(borders))

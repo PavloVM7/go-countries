@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"os"
 	"pm.com/go-countries/domain"
-	"sort"
 	"testing"
 )
 
@@ -62,20 +61,33 @@ func Test_createCountryFromJson(t *testing.T) {
 	expected.AddTranslation("urd", "فرانس", "جمہوریہ فرانس")
 	expected.AddTranslation("zho", "法国", "法兰西共和国")
 
-	assert.Equal(t, len(expected.Translations()), len(actual.Translations()))
-	expTr := expected.Translations()
-	actTr := actual.Translations()
-	sort.Slice(expTr, func(i, j int) bool {
-		return expTr[i].Language < expTr[j].Language
-	})
-	sort.Slice(actTr, func(i, j int) bool {
-		return actTr[i].Language < actTr[j].Language
-	})
-	for i := 0; i < len(expTr); i++ {
-		t.Log(i, expTr[i])
-		t.Log(i, actTr[i])
-		assert.Equal(t, expTr[i], actTr[i])
-	}
+	expected.SetLatLng(46.0, 2.0)
+	expected.SetLandlocked(false)
+	expected.SetBorders("AND", "BEL", "DEU", "ITA", "LUX", "MCO", "ESP", "CHE")
+	expected.SetArea(551695.0)
+
+	expected.AddDemonym("eng", "French", "French")
+	expected.AddDemonym("fra", "Française", "Français")
+
+	expected.SetFlag("🇫🇷")
+
+	expected.AddMap("googleMaps", "https://goo.gl/maps/g7QxxSFsWyTPKuzd7")
+	expected.AddMap("openStreetMaps", "https://www.openstreetmap.org/relation/1403916")
+
+	expected.SetPopulation(67391582)
+	expected.SetFifa("FRA")
+	expected.SetCar("right", "F")
+	expected.SetTimezones("UTC-10:00", "UTC-09:30", "UTC-09:00", "UTC-08:00", "UTC-04:00", "UTC-03:00",
+		"UTC+01:00", "UTC+02:00", "UTC+03:00", "UTC+04:00", "UTC+05:00", "UTC+10:00", "UTC+11:00", "UTC+12:00")
+	expected.AddFlag("png", "https://flagcdn.com/w320/fr.png")
+	expected.AddFlag("svg", "https://flagcdn.com/fr.svg")
+	expected.AddFlag("alt", "The flag of France is composed of three equal vertical bands of blue, white and red.")
+
+	expected.AddCoatOfArm("png", "https://mainfacts.com/media/images/coats_of_arms/fr.png")
+	expected.AddCoatOfArm("svg", "https://mainfacts.com/media/images/coats_of_arms/fr.svg")
+
+	expected.SetStartOfWeek("monday")
+	expected.SetCapitalInfo(domain.LatLng{Lat: 48.87, Lng: 2.33})
 
 	assert.Equal(t, expected, actual)
 }

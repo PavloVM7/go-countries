@@ -30,7 +30,11 @@ type countryExt struct {
 func (c *countryExt) AddCoatOfArm(picType, ref string) {
 	picType = strings.TrimSpace(picType)
 	ref = strings.TrimSpace(ref)
+	if picType == "" || ref == "" {
+		return
+	}
 	c.coatOfArms = append(c.coatOfArms, CodeDescription{Code: picType, Description: ref})
+	sort.Slice(c.coatOfArms, func(i, j int) bool { return c.coatOfArms[i].Code < c.coatOfArms[j].Code })
 }
 func (c *countryExt) CoatOfArms() []CodeDescription {
 	return tools.CopyArray(c.coatOfArms)
@@ -38,7 +42,11 @@ func (c *countryExt) CoatOfArms() []CodeDescription {
 func (c *countryExt) AddMap(name, ref string) {
 	name = strings.TrimSpace(name)
 	ref = strings.TrimSpace(ref)
+	if name == "" || ref == "" {
+		return
+	}
 	c.maps = append(c.maps, CodeDescription{Code: name, Description: ref})
+	sort.Slice(c.maps, func(i, j int) bool { return c.maps[i].Code < c.maps[j].Code })
 }
 func (c *countryExt) Maps() []CodeDescription {
 	return tools.CopyArray(c.maps)
@@ -46,7 +54,11 @@ func (c *countryExt) Maps() []CodeDescription {
 func (c *countryExt) AddFlag(pic, ref string) {
 	pic = strings.TrimSpace(pic)
 	ref = strings.TrimSpace(ref)
+	if pic == "" || ref == "" {
+		return
+	}
 	c.flags = append(c.flags, CodeDescription{Code: pic, Description: ref})
+	sort.Slice(c.flags, func(i, j int) bool { return c.flags[i].Code < c.flags[j].Code })
 }
 func (c *countryExt) Flags() []CodeDescription {
 	return tools.CopyArray(c.flags)
@@ -63,7 +75,11 @@ func (c *countryExt) AddDemonym(language, f, m string) {
 	language = strings.TrimSpace(language)
 	f = strings.TrimSpace(f)
 	m = strings.TrimSpace(m)
+	if language == "" || f == "" || m == "" {
+		return
+	}
 	c.demonyms = append(c.demonyms, Demonym{Language: language, F: f, M: m})
+	sort.Slice(c.demonyms, func(i, j int) bool { return c.demonyms[i].Language < c.demonyms[j].Language })
 }
 func (c *countryExt) Demonyms() []Demonym {
 	return tools.CopyArray(c.demonyms)
